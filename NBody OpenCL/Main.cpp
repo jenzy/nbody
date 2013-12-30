@@ -4,9 +4,9 @@
 #include <cmath>
 #include <CL/cl.h>
 
-#include "HelperOpenCL.h"
+#include "Main.h"
 
 
 int main( int argc, char **argv ) {
-	clinfo();
+	cpuOriginal();
 }
