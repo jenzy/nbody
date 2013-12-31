@@ -8,5 +8,17 @@
 
 
 int main( int argc, char **argv ) {
-	cpuOriginal();
+	info_t info;
+	info.n = 1000; 				
+	info.steps = 10; 			
+	info.sphereRadius = 10; 	
+	info.kappa = 1; 			
+	info.mass = 1; 			
+	info.eps = 0.0001; 		
+	info.dt = 0.001; 			
+	info.seed = 42;
+
+
+	//cpuOriginal( &info );
+	gpu();
 }

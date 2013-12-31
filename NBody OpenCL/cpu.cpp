@@ -5,88 +5,58 @@
 
 #include "Main.h"
 
-#define M_PI 3.1415926
-#define SWAP(a,b) do {double *temp=a; a=b; b=temp;} while(0)
-
-
-void cpuOriginal() {
-
-	int n = 1000; 				/* stevilo teles */
-	int steps = 10; 			/* stevilo korakov */
-	double sphereRadius = 10; 	/* nastavitve zacetne konfiguracije */
-	double kappa = 1; 			/* gravitacijska konstanta */
-	double mass = 1; 			/* masa teles */
-	double eps = 0.0001; 		/* konstanta glajenja */
-	double dt = 0.001; 			/* casovna konstanta */
-	int seed = 42;
-
+void cpuOriginal( info_t *info ) {
 	int i, j, s;
-
-	double fix, fiy, fiz;
-	double dx, dy, dz, ax, ay, az, invr, force;
-	double vscale = sqrt( kappa*mass*(n - 1) / (double) sphereRadius );  /* fizikalni zakoni */
-
-	double *m = (double *) malloc( sizeof(double) *n );
-	double *x = (double *) malloc( sizeof(double) *n );
-	double *y = (double *) malloc( sizeof(double) *n );
-	double *z = (double *) malloc( sizeof(double) *n );
-	double *vx = (double *) malloc( sizeof(double) *n );
-	double *vy = (double *) malloc( sizeof(double) *n );
-	double *vz = (double *) malloc( sizeof(double) *n );
-	double *xnew = (double *) malloc( sizeof(double) *n );
-	double *ynew = (double *) malloc( sizeof(double) *n );
-	double *znew = (double *) malloc( sizeof(double) *n );
-
-	int *displacements, *dataCount;
-	int min, max, blok, porocessNum;
-
 	clock_t clockStart, clockEnd;
 
+	double dx, dy, dz, ax, ay, az, invr, force;
+	//double vscale = sqrt( kappa*mass*(n - 1) / (double) sphereRadius );  /* fizikalni zakoni */
+	//int *displacements, *dataCount;
+	//int min, max, blok, porocessNum;
 
-	/* inicializacija zacetnih polozajev in hitrosti */
-	/* telesa so na plascu krogle z radijem sphereRadius */
-	/* hitrost telesa lezi v ravnini, ki je pravokotna na radij */
-	srand( seed );
-	for( i = 0; i<n; i++ ) {
-		m[i] = mass;
+	double *m = (double *) malloc( sizeof(double) * info->n );
+	double *x = (double *) malloc( sizeof(double) * info->n );
+	double *y = (double *) malloc( sizeof(double) * info->n );
+	double *z = (double *) malloc( sizeof(double) * info->n );
+	double *vx = (double *) malloc( sizeof(double) * info->n );
+	double *vy = (double *) malloc( sizeof(double) * info->n );
+	double *vz = (double *) malloc( sizeof(double) * info->n );
+	double *xnew = (double *) malloc( sizeof(double) * info->n );
+	double *ynew = (double *) malloc( sizeof(double) * info->n );
+	double *znew = (double *) malloc( sizeof(double) * info->n );
 
-		fix = 2 * M_PI*rand( ) / (double) RAND_MAX;
-		fiy = 2 * M_PI*rand( ) / (double) RAND_MAX;
-		fiz = 2 * M_PI*rand( ) / (double) RAND_MAX;
+	generateCoordinates( x, y, z, info );	//inicializacija zacetnih polozajev in hitrosti
 
-		x[i] = cos( fiz )*cos( fiy )*sphereRadius;
-		y[i] = -sin( fiz )*cos( fiy )*sphereRadius;
-		z[i] = -sin( fiy )*sphereRadius;
+	for( i = 0; i < info->n; i++ ) {
+		vx[i] = vy[i] = vz[i] = 0.0;	//zacetno hitrost nastavimo na 0
+		m[i] = info->mass;
 	}
 
-	/* zacetno hitrost nastavimo na 0 */
-	for( i = 0; i<n; i++ )
-		vx[i] = vy[i] = vz[i] = 0.0;
-
 	clockStart = clock( );
-	for( s = 0; s < steps; s++ ) {
-		for( i = 0; i < n; i++ ) { /* za vsako telo i */
+	for( s = 0; s < info->steps; s++ ) {
+		for( i = 0; i < info->n; i++ ) { // za vsako telo i 
 			ax = ay = az = 0.0;
-			for( j = 0; j<n; j++ ) { /* pregledamo vse ostale delce j */
+			for( j = 0; j<info->n; j++ ) { // pregledamo vse ostale delce j 
 				dx = x[j] - x[i];
 				dy = y[j] - y[i];
 				dz = z[j] - z[i];
 
 				//Izvedemo trik brez uporabe if stavkov
-				invr = 1.0 / sqrt( dx*dx + dy*dy + dz*dz + eps );
-				force = kappa*m[j] * invr*invr*invr;
+				invr = 1.0 / sqrt( dx*dx + dy*dy + dz*dz + info->eps );
+				force = info->kappa*m[j] * invr*invr*invr;
 
-				ax += force*dx; /* izracun skupnega pospeska */
+				ax += force*dx; // izracun skupnega pospeska
 				ay += force*dy;
 				az += force*dz;
 			}
-			xnew[i] = x[i] + vx[i] * dt + 0.5*ax*dt*dt; /* nov polozaj za telo i */
-			ynew[i] = y[i] + vy[i] * dt + 0.5*ay*dt*dt;
-			znew[i] = z[i] + vz[i] * dt + 0.5*az*dt*dt;
+			double dt2 = info->dt*info->dt;
+			xnew[i] = x[i] + vx[i] * info->dt + 0.5*ax*dt2; // nov polozaj za telo i
+			ynew[i] = y[i] + vy[i] * info->dt + 0.5*ay*dt2;
+			znew[i] = z[i] + vz[i] * info->dt + 0.5*az*dt2;
 
-			vx[i] += ax*dt; /* nova hitrost za telo i */
-			vy[i] += ay*dt;
-			vz[i] += az*dt;
+			vx[i] += ax * info->dt; /* nova hitrost za telo i */
+			vy[i] += ay * info->dt;
+			vz[i] += az * info->dt;
 		}
 		SWAP( xnew, x );
 		SWAP( ynew, y );
@@ -96,7 +66,7 @@ void cpuOriginal() {
 	clockEnd = clock( );
 
 	printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );
-	checkResults( x, y, z, n );
+	checkResults( x, y, z, info->n );
 
 	// sprostimo rezerviran prostor
 	free( m );
