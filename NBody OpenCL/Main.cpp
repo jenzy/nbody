@@ -18,7 +18,9 @@ int main( int argc, char **argv ) {
 	info.dt = 0.001; 			
 	info.seed = 42;
 
+	info.deviceType = CL_DEVICE_TYPE_GPU;
 
 	//cpuOriginal( &info );
-	gpu();
+	gpu(&info);
+
 }

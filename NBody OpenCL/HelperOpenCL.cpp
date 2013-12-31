@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <string>
 
 #include <CL/cl.h>
 
@@ -76,4 +77,50 @@ void clinfo( ) {
 		free( devices );
 	}
 	free( platforms );
+}
+
+char* ReadKernelFromFile( char *filename, int *outLen ) {
+	FILE *file;
+	fopen_s( &file, filename, "rb" );
+	
+	// get source length
+	fseek( file, 0, SEEK_END );
+	int len = ftell( file );
+	rewind( file );
+	if( outLen != nullptr )
+		*outLen = len;
+
+	// read kernel the source
+	char *source = (char*) malloc( len + 1 );
+	fread_s( source, len, sizeof(char), len, file );
+	source[len] = '\0';
+	fclose( file );
+
+	return source;
+}
+
+char* GetPlatformName(cl_platform_id *platform_id) {
+	size_t buff_len;
+	clGetPlatformInfo( *platform_id, CL_PLATFORM_NAME, 0, NULL, &buff_len );
+	char *buff = (char *) malloc( sizeof(char) *(buff_len + 1) ); buff[buff_len] = '\0';
+	clGetPlatformInfo( *platform_id, CL_PLATFORM_NAME, buff_len, buff, NULL );
+	return buff;
+}
+
+char* GetDeviceName( cl_device_id *device_id ) {
+	size_t buff_len;
+	clGetDeviceInfo( *device_id, CL_DEVICE_NAME, 0, NULL, &buff_len );
+	char *buff = (char *) malloc( sizeof(char) *(buff_len + 1) );  buff[buff_len] = '\0';
+	clGetDeviceInfo( *device_id, CL_DEVICE_NAME, buff_len, buff, NULL );
+	return buff;
+}
+
+void PrintBuildLog(cl_program *program, cl_device_id *device_id) {
+	size_t build_log_len;
+	char *log;
+	clGetProgramBuildInfo( *program, *device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &build_log_len );
+	log = (char *) malloc( sizeof(char) *(build_log_len + 1) );
+	clGetProgramBuildInfo( *program, *device_id, CL_PROGRAM_BUILD_LOG, build_log_len, log, NULL );
+	printf( "Build log: \n%s\n", log );
+	free( log );
 }

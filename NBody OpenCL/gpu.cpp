@@ -2,25 +2,103 @@
 #include <stdlib.h>
 #include <CL/cl.h>
 
-#define MAX_SOURCE_SIZE	8192
-#define SIZE			4
+#include "Main.h"
 
-const char *source_str =
-"__kernel void vector_add(__global const double *A,		\n"
-"						  __global const double *B,		\n"
-"						  __global double *C,				\n"
-"						  int size)						\n"
-"{														\n"
-"	// globalni indeks elementa							\n"
-"	int i = get_global_id(0);							\n"
-"	// izracun											\n"
-"	while( i < size )									\n"
-"	{													\n"
-"		C[i] = A[i] + B[i];								\n"
-"		i += get_global_size(0);						\n"
-"	}													\n"
-"}														\n";
+void gpu( info_t *info ) {
+	cl_int	ret;
+	char *buf = nullptr;
 
+	printf( "\n\n== OpenCL ==\n" );
+
+#pragma region OpenCL Inicializacija
+	// Platforma
+	cl_platform_id platform_id = nullptr;
+	ret = clGetPlatformIDs( 1, &platform_id, NULL );
+	buf = GetPlatformName( &platform_id );
+	printf( "Platforma: %s\n", buf );
+	free( buf );
+	
+	// Naprava 
+	cl_device_id device_id;
+	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
+	buf = GetDeviceName( &device_id );
+	printf( "Naprava: %s\n", buf );
+	free( buf );
+
+	cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
+	cl_command_queue command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
+#pragma endregion
+
+#pragma region Delitev dela
+	// Delitev dela
+	size_t local_item_size = 256;
+	size_t num_groups = ((info->n - 1) / local_item_size + 1);
+	size_t global_item_size = num_groups*local_item_size;
+	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d)\n", local_item_size, num_groups, global_item_size, info->n );
+#pragma endregion
+
+	// Host alokacija
+	float *M = (float *) malloc( sizeof(float) * info->n );
+	float *X = (float *) malloc( sizeof(float) * info->n );
+	float *Y = (float *) malloc( sizeof(float) * info->n );
+	float *Z = (float *) malloc( sizeof(float) * info->n );
+	generateCoordinates( X, Y, Z, info );
+	for( int i = 0; i < info->n; i++ ) 
+		M[i] = info->mass;
+
+
+	// Device alokacija
+	cl_mem devX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devM = clCreateBuffer( context, CL_MEM_READ_ONLY, info->n*sizeof(float), NULL, &ret );
+	cl_mem devNewX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devNewY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devNewZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devVX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devVY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devVZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+
+	// Kopiranje podatkov
+	ret = clEnqueueWriteBuffer( command_queue, devX, CL_TRUE, 0, info->n*sizeof(float), X, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devY, CL_TRUE, 0, info->n*sizeof(float), Y, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devZ, CL_TRUE, 0, info->n*sizeof(float), Z, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devM, CL_TRUE, 0, info->n*sizeof(float), M, 0, NULL, NULL );
+
+
+	// Priprava programa
+	char *source_str = ReadKernelFromFile( "kernel.cl", NULL );
+	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
+	ret = clBuildProgram( program, 1, &device_id, NULL, NULL, NULL );	// Prevajanje
+	PrintBuildLog( &program, &device_id );
+
+
+#pragma region Cleanup
+	ret = clFlush( command_queue );
+	ret = clFinish( command_queue );
+	//ret = clReleaseKernel( kernel );
+	ret = clReleaseProgram( program );
+	ret = clReleaseMemObject( devX );
+	ret = clReleaseMemObject( devY );
+	ret = clReleaseMemObject( devZ );
+	ret = clReleaseMemObject( devM );
+	ret = clReleaseMemObject( devNewX );
+	ret = clReleaseMemObject( devNewY );
+	ret = clReleaseMemObject( devNewZ );
+	ret = clReleaseMemObject( devVX );
+	ret = clReleaseMemObject( devVY );
+	ret = clReleaseMemObject( devVZ );
+	ret = clReleaseCommandQueue( command_queue );
+	ret = clReleaseContext( context );
+
+	free( M );
+	free( X );
+	free( Y );
+	free( Z );
+	free( source_str );
+#pragma endregion
+}
+/*
 void gpu( void ) {
 	int i;
 	cl_int ret;
@@ -39,13 +117,6 @@ void gpu( void ) {
 	cl_uint			ret_num_platforms;
 
 	ret = clGetPlatformIDs( 1, &platform_id, &ret_num_platforms );
-
-	// Podatki o napravi
-	/*cl_device_id	device_id;
-	cl_uint			ret_num_devices;
-
-	ret = clGetDeviceIDs( platform_id, CL_DEVICE_TYPE_DEFAULT, 1,
-						  &device_id, &ret_num_devices );*/
 
 	// Naprava 
 	cl_device_id	device_id[2];
@@ -89,6 +160,7 @@ void gpu( void ) {
 								vectorSize*sizeof(double), B, 0, NULL, NULL );
 
 	// Priprava programa
+	char *source_str = ReadKernelFromFile( "kernel.cl", NULL );
 	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str,
 													NULL, &ret );
 
@@ -144,3 +216,4 @@ void gpu( void ) {
 	free( B );
 	free( C );
 }
+*/

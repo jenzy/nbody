@@ -19,6 +19,18 @@ double checkResults( double *X, double *Y, double *Z, int len ) {
 	printf( "Result check: %lf (%lf, %lf, %lf)\n", sum, x, y, z );
 	return sum;
 }
+float checkResults( float *X, float *Y, float *Z, int len ) {
+	float x = 0, y = 0, z = 0;
+	for( int i = 0; i < len; i++ ) {
+		x += X[i];
+		y += Y[i];
+		z += Z[i];
+	}
+
+	float sum = x + y + z;
+	printf( "Result check: %f (%f, %f, %f)\n", sum, x, y, z );
+	return sum;
+}
 
 /* inicializacija zacetnih polozajev in hitrosti */
 /* telesa so na plascu krogle z radijem sphereRadius */
@@ -31,6 +43,20 @@ void generateCoordinates( double *X, double *Y, double *Z, info_t *info ) {
 		fix = 2 * M_PI*rand( ) / (double) RAND_MAX;
 		fiy = 2 * M_PI*rand( ) / (double) RAND_MAX;
 		fiz = 2 * M_PI*rand( ) / (double) RAND_MAX;
+
+		X[i] = cos( fiz ) * cos( fiy ) * info->sphereRadius;
+		Y[i] = -sin( fiz ) * cos( fiy ) * info->sphereRadius;
+		Z[i] = -sin( fiy ) * info->sphereRadius;
+	}
+}
+void generateCoordinates( float *X, float *Y, float *Z, info_t *info ) {
+	float fix, fiy, fiz;
+
+	srand( info->seed );
+	for( int i = 0; i < info->n; i++ ) {
+		fix = 2 * M_PI*rand( ) / (float) RAND_MAX;
+		fiy = 2 * M_PI*rand( ) / (float) RAND_MAX;
+		fiz = 2 * M_PI*rand( ) / (float) RAND_MAX;
 
 		X[i] = cos( fiz ) * cos( fiy ) * info->sphereRadius;
 		Y[i] = -sin( fiz ) * cos( fiy ) * info->sphereRadius;
