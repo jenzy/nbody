@@ -1,12 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <CL/cl.h>
+#include <time.h>
 
 #include "Main.h"
+
+void swap( cl_mem *a, cl_mem *b ) {
+	cl_mem *temp = a;
+	a = b;
+	b = temp;
+}
 
 void gpu( info_t *info ) {
 	cl_int	ret;
 	char *buf = nullptr;
+	clock_t clockStart, clockEnd;
+	cl_event event;
 
 	printf( "\n\n== OpenCL ==\n" );
 
@@ -45,7 +54,9 @@ void gpu( info_t *info ) {
 	generateCoordinates( X, Y, Z, info );
 	for( int i = 0; i < info->n; i++ ) 
 		M[i] = info->mass;
+	float *V = (float *) calloc( info->n, sizeof(float) );
 
+	clockStart = clock( );
 
 	// Device alokacija
 	cl_mem devX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
@@ -64,19 +75,92 @@ void gpu( info_t *info ) {
 	ret = clEnqueueWriteBuffer( command_queue, devY, CL_TRUE, 0, info->n*sizeof(float), Y, 0, NULL, NULL );
 	ret = clEnqueueWriteBuffer( command_queue, devZ, CL_TRUE, 0, info->n*sizeof(float), Z, 0, NULL, NULL );
 	ret = clEnqueueWriteBuffer( command_queue, devM, CL_TRUE, 0, info->n*sizeof(float), M, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devVX, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devVY, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devVZ, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
 
 
 	// Priprava programa
-	char *source_str = ReadKernelFromFile( "kernel.cl", NULL );
+	char *source_str = ReadKernelFromFile( "kernelFloat1.cl", NULL );
 	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
 	ret = clBuildProgram( program, 1, &device_id, NULL, NULL, NULL );	// Prevajanje
 	PrintBuildLog( &program, &device_id );
 
+	// priprava šèecpa
+	cl_kernel kernel = clCreateKernel( program, "kernelFloat1", &ret );
+	ret = clSetKernelArg( kernel, 0, sizeof(cl_mem), (void *) &devX );
+	ret |= clSetKernelArg( kernel, 1, sizeof(cl_mem), (void *) &devY );
+	ret |= clSetKernelArg( kernel, 2, sizeof(cl_mem), (void *) &devZ );
+	ret |= clSetKernelArg( kernel, 3, sizeof(cl_mem), (void *) &devNewX );
+	ret |= clSetKernelArg( kernel, 4, sizeof(cl_mem), (void *) &devNewY );
+	ret |= clSetKernelArg( kernel, 5, sizeof(cl_mem), (void *) &devNewZ );
+	ret |= clSetKernelArg( kernel, 6, sizeof(cl_mem), (void *) &devVX );
+	ret |= clSetKernelArg( kernel, 7, sizeof(cl_mem), (void *) &devVY );
+	ret |= clSetKernelArg( kernel, 8, sizeof(cl_mem), (void *) &devVZ );
+	ret |= clSetKernelArg( kernel, 9, sizeof(cl_mem), (void *) &devM );
+	ret |= clSetKernelArg( kernel, 10, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernel, 11, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernel, 12, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernel, 13, sizeof(cl_float), (void *) &(info->dt) );
+
+	// šcepec: zagon
+	ret = clEnqueueNDRangeKernel( command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &event );
+	clWaitForEvents( 1, &event );
+	// priprava šèecpa
+	//cl_kernel kernel = clCreateKernel( program, "kernelFloat1", &ret );
+	ret = clSetKernelArg( kernel, 0, sizeof(cl_mem), (void *) &devNewX );
+	ret |= clSetKernelArg( kernel, 1, sizeof(cl_mem), (void *) &devNewY );
+	ret |= clSetKernelArg( kernel, 2, sizeof(cl_mem), (void *) &devNewZ );
+	ret |= clSetKernelArg( kernel, 3, sizeof(cl_mem), (void *) &devX );
+	ret |= clSetKernelArg( kernel, 4, sizeof(cl_mem), (void *) &devY );
+	ret |= clSetKernelArg( kernel, 5, sizeof(cl_mem), (void *) &devZ );
+	ret |= clSetKernelArg( kernel, 6, sizeof(cl_mem), (void *) &devVX );
+	ret |= clSetKernelArg( kernel, 7, sizeof(cl_mem), (void *) &devVY );
+	ret |= clSetKernelArg( kernel, 8, sizeof(cl_mem), (void *) &devVZ );
+	ret |= clSetKernelArg( kernel, 9, sizeof(cl_mem), (void *) &devM );
+	ret |= clSetKernelArg( kernel, 10, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernel, 11, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernel, 12, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernel, 13, sizeof(cl_float), (void *) &(info->dt) );
+
+	// šcepec: zagon
+	ret = clEnqueueNDRangeKernel( command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
+	
+	/*for( int i = 0; i < info->steps; i++ ) {
+		ret = clEnqueueNDRangeKernel( command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
+		swap( &devX, &devNewX );
+		swap( &devY, &devNewY );
+		swap( &devZ, &devNewZ );
+		ret = clSetKernelArg( kernel, 0, sizeof(cl_mem), (void *) &devX );
+		ret |= clSetKernelArg( kernel, 1, sizeof(cl_mem), (void *) &devY );
+		ret |= clSetKernelArg( kernel, 2, sizeof(cl_mem), (void *) &devZ );
+		ret |= clSetKernelArg( kernel, 3, sizeof(cl_mem), (void *) &devNewX );
+		ret |= clSetKernelArg( kernel, 4, sizeof(cl_mem), (void *) &devNewY );
+		ret |= clSetKernelArg( kernel, 5, sizeof(cl_mem), (void *) &devNewZ );
+	}*/
+
+
+	// Prenos rezultatov na gostitelja
+	float *newX = (float*) malloc( info->n*sizeof(float) );
+	float *newY = (float*) malloc( info->n*sizeof(float) );
+	float *newZ = (float*) malloc( info->n*sizeof(float) );
+	/*ret = clEnqueueReadBuffer( command_queue, devNewX, CL_TRUE, 0, info->n*sizeof(float), newX, 0, NULL, NULL );
+	ret = clEnqueueReadBuffer( command_queue, devNewY, CL_TRUE, 0, info->n*sizeof(float), newY, 0, NULL, NULL );
+	ret = clEnqueueReadBuffer( command_queue, devNewZ, CL_TRUE, 0, info->n*sizeof(float), newZ, 0, NULL, NULL );*/
+	ret = clEnqueueReadBuffer( command_queue, devX, CL_TRUE, 0, info->n*sizeof(float), newX, 0, NULL, NULL );
+	ret = clEnqueueReadBuffer( command_queue, devY, CL_TRUE, 0, info->n*sizeof(float), newY, 0, NULL, NULL );
+	ret = clEnqueueReadBuffer( command_queue, devZ, CL_TRUE, 0, info->n*sizeof(float), newZ, 0, NULL, NULL );
+	clockEnd = clock( );
+
+
+	//checkResults( X, Y, Z, info->n );
+	printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );
+	checkResults( newX, newY, newZ, info->n );
 
 #pragma region Cleanup
 	ret = clFlush( command_queue );
 	ret = clFinish( command_queue );
-	//ret = clReleaseKernel( kernel );
+	ret = clReleaseKernel( kernel );
 	ret = clReleaseProgram( program );
 	ret = clReleaseMemObject( devX );
 	ret = clReleaseMemObject( devY );
@@ -95,6 +179,9 @@ void gpu( info_t *info ) {
 	free( X );
 	free( Y );
 	free( Z );
+	free( newX );
+	free( newY );
+	free( newZ );
 	free( source_str );
 #pragma endregion
 }

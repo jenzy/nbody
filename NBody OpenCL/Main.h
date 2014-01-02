@@ -4,23 +4,24 @@
 #include <CL\cl.h>
 
 #define M_PI 3.1415926
-#define SWAP(a,b) do {double *temp=a; a=b; b=temp;} while(0)
+//#define SWAP(a,b) do {double *temp=a; a=b; b=temp;} while(0)
+#define SWAP(a,b) do {float *temp=a; a=b; b=temp;} while(0)
 
 typedef struct _info {
 	int n; 			        /* stevilo teles */
 	int steps; 			    /* stevilo korakov */
 	double sphereRadius; 	/* nastavitve zacetne konfiguracije */
-	double kappa; 			/* gravitacijska konstanta */
-	double mass; 			/* masa teles */
-	double eps; 		    /* konstanta glajenja */
-	double dt; 			    /* casovna konstanta */
+	float kappa; 			/* gravitacijska konstanta */
+	float mass; 			/* masa teles */
+	float eps; 		    /* konstanta glajenja */
+	float dt; 			    /* casovna konstanta */
 	int seed;				/* seed za random */
 
 	cl_device_type deviceType;
 } info_t;
 
 // cpu.cpp
-void cpuOriginal( info_t *info );
+void cpu( info_t *info );
 
 // gpu.cpp
 void gpu( info_t *info );

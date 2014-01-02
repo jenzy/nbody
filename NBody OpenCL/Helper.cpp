@@ -8,27 +8,34 @@
 
 
 double checkResults( double *X, double *Y, double *Z, int len ) {
-	double x = 0, y = 0, z = 0;
+	double sum = 0;
+	double *sums = (double*) malloc(len * sizeof(double));
 	for( int i = 0; i < len; i++ ) {
-		x += X[i];
-		y += Y[i];
-		z += Z[i];
+		sum += X[i] + Y[i] + Z[i];
+		sums[i] = X[i] + Y[i] + Z[i];
 	}
-
-	double sum = x + y + z;
-	printf( "Result check: %lf (%lf, %lf, %lf)\n", sum, x, y, z );
+	printf( "Result check: %lf [", sum );
+	for( int i = 0; i < 3; i++ ) {
+		printf( "%lf ", sums[i] );
+	}
+	printf( "]\n" );
+	free( sums );
 	return sum;
 }
 float checkResults( float *X, float *Y, float *Z, int len ) {
-	float x = 0, y = 0, z = 0;
+	float sum = 0;
+	float *sums = (float*) malloc( len * sizeof(float) );
 	for( int i = 0; i < len; i++ ) {
-		x += X[i];
-		y += Y[i];
-		z += Z[i];
+		sum += X[i] + Y[i] + Z[i];
+		sums[i] = X[i] + Y[i] + Z[i];
 	}
-
-	float sum = x + y + z;
-	printf( "Result check: %f (%f, %f, %f)\n", sum, x, y, z );
+	printf( "Result check: %f [", sum );
+	
+	for( int i = 0; i < 10; i++ ) {
+		printf( "%f ", sums[i] );
+	}
+	printf( "]\n" );
+	free( sums );
 	return sum;
 }
 
