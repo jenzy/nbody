@@ -12,7 +12,7 @@ int main( int argc, char **argv ) {
 	info_t info;
 	info.n = 1000; 				
 	info.steps = 100; 		//10	
-	info.sphereRadius = 10; 	
+	info.sphereRadius = 10; 
 	info.kappa = 1; 			
 	info.mass = 1; 			
 	info.eps = 0.0001; 		
@@ -22,6 +22,6 @@ int main( int argc, char **argv ) {
 	info.deviceType = CL_DEVICE_TYPE_GPU;
 
 	cpu( &info );
-	gpu(&info);
+	gpu( &info );
 
 }

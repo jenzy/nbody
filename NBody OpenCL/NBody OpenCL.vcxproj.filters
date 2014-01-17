@@ -40,10 +40,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel.cl">
+    <None Include="kernelFloat1.cl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="kernelFloat1.cl">
+    <None Include="kernelSyncTest.cl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

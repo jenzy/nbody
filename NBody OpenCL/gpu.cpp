@@ -7,15 +7,146 @@
 
 #define SWAP_MEM(a,b) do {cl_mem temp=a; a=b; b=temp;} while(0)
 
-void swap( cl_mem *a, cl_mem *b ) {
-	cl_mem *temp = a;
-	a = b;
-	b = temp;
-}
-void swap( cl_mem a, cl_mem b ) {
-	cl_mem temp = a;
-	a = b;
-	b = temp;
+void gpuSyncInKernelTest( info_t *info ) {
+	cl_int	ret;
+	char *buf = nullptr;
+	clock_t clockStart, clockEnd;
+	cl_event event;
+
+	printf( "\n\n== OpenCL (Sync in Kernel Test) ==\n" );
+
+#pragma region OpenCL Inicializacija
+	// Platforma
+	cl_platform_id platform_id = nullptr;
+	ret = clGetPlatformIDs( 1, &platform_id, NULL );
+	buf = GetPlatformName( &platform_id );
+	printf( "Platforma: %s\n", buf );
+	free( buf );
+
+	// Naprava 
+	cl_device_id device_id;
+	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
+	buf = GetDeviceName( &device_id );
+	printf( "Naprava: %s\n", buf );
+	free( buf );
+
+	cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
+	cl_command_queue command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
+#pragma endregion
+
+#pragma region Delitev dela
+	// Delitev dela
+	size_t local_item_size = 256;
+	size_t num_groups = ((info->n - 1) / local_item_size + 1);
+	size_t global_item_size = num_groups*local_item_size;
+	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d)\n", local_item_size, num_groups, global_item_size, info->n );
+#pragma endregion
+
+	// Host alokacija
+	float *M = (float *) malloc( sizeof(float) * info->n );
+	float *X = (float *) malloc( sizeof(float) * info->n );
+	float *Y = (float *) malloc( sizeof(float) * info->n );
+	float *Z = (float *) malloc( sizeof(float) * info->n );
+	generateCoordinates( X, Y, Z, info );
+	for( int i = 0; i < info->n; i++ )
+		M[i] = info->mass;
+	float *V = (float *) calloc( info->n, sizeof(float) );
+
+	clockStart = clock( );
+	// Device alokacija
+	cl_mem devX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devM = clCreateBuffer( context, CL_MEM_READ_ONLY, info->n*sizeof(float), NULL, &ret );
+	cl_mem devNewX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devNewY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devNewZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devVX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devVY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+	cl_mem devVZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
+
+	// Kopiranje podatkov
+	ret = clEnqueueWriteBuffer( command_queue, devX, CL_TRUE, 0, info->n*sizeof(float), X, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devY, CL_TRUE, 0, info->n*sizeof(float), Y, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devZ, CL_TRUE, 0, info->n*sizeof(float), Z, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devM, CL_TRUE, 0, info->n*sizeof(float), M, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devVX, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devVY, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
+	ret = clEnqueueWriteBuffer( command_queue, devVZ, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
+
+
+	// Priprava programa
+	char *source_str = ReadKernelFromFile( "kernelFloat1.cl", NULL );
+	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
+	ret = clBuildProgram( program, 1, &device_id, NULL, NULL, NULL );	// Prevajanje
+	if( ret != CL_SUCCESS ) {
+		PrintBuildLog( &program, &device_id );
+		exit( 1 );
+	}
+
+	// priprava šcepca EVEN
+	cl_kernel kernelEven = clCreateKernel( program, "kernelFloat1", &ret );
+	ret = clSetKernelArg( kernelEven, 0, sizeof(cl_mem), (void *) &devX );
+	ret |= clSetKernelArg( kernelEven, 1, sizeof(cl_mem), (void *) &devY );
+	ret |= clSetKernelArg( kernelEven, 2, sizeof(cl_mem), (void *) &devZ );
+	ret |= clSetKernelArg( kernelEven, 3, sizeof(cl_mem), (void *) &devNewX );
+	ret |= clSetKernelArg( kernelEven, 4, sizeof(cl_mem), (void *) &devNewY );
+	ret |= clSetKernelArg( kernelEven, 5, sizeof(cl_mem), (void *) &devNewZ );
+	ret |= clSetKernelArg( kernelEven, 6, sizeof(cl_mem), (void *) &devVX );
+	ret |= clSetKernelArg( kernelEven, 7, sizeof(cl_mem), (void *) &devVY );
+	ret |= clSetKernelArg( kernelEven, 8, sizeof(cl_mem), (void *) &devVZ );
+	ret |= clSetKernelArg( kernelEven, 9, sizeof(cl_mem), (void *) &devM );
+	ret |= clSetKernelArg( kernelEven, 10, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernelEven, 11, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernelEven, 12, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernelEven, 13, sizeof(cl_float), (void *) &(info->dt) );
+	ret |= clSetKernelArg( kernelEven, 14, sizeof(cl_float), (void *) &(info->steps) );
+
+
+	// šcepec: zagon
+	ret = clEnqueueNDRangeKernel( command_queue, kernelEven, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
+	
+	// Prenos rezultatov na gostitelja
+	float *newX = (float*) malloc( info->n*sizeof(float) );
+	float *newY = (float*) malloc( info->n*sizeof(float) );
+	float *newZ = (float*) malloc( info->n*sizeof(float) );
+	ret = clEnqueueReadBuffer( command_queue, devX, CL_TRUE, 0, info->n*sizeof(float), newX, 0, NULL, NULL );
+	ret = clEnqueueReadBuffer( command_queue, devY, CL_TRUE, 0, info->n*sizeof(float), newY, 0, NULL, NULL );
+	ret = clEnqueueReadBuffer( command_queue, devZ, CL_TRUE, 0, info->n*sizeof(float), newZ, 0, NULL, NULL );
+	clockEnd = clock( );
+
+
+	//checkResults( X, Y, Z, info->n );
+	printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );
+	checkResults( newX, newY, newZ, info->n );
+
+#pragma region Cleanup
+	ret = clFlush( command_queue );
+	ret = clFinish( command_queue );
+	ret = clReleaseKernel( kernelEven );
+	ret = clReleaseProgram( program );
+	ret = clReleaseMemObject( devX );
+	ret = clReleaseMemObject( devY );
+	ret = clReleaseMemObject( devZ );
+	ret = clReleaseMemObject( devM );
+	ret = clReleaseMemObject( devNewX );
+	ret = clReleaseMemObject( devNewY );
+	ret = clReleaseMemObject( devNewZ );
+	ret = clReleaseMemObject( devVX );
+	ret = clReleaseMemObject( devVY );
+	ret = clReleaseMemObject( devVZ );
+	ret = clReleaseCommandQueue( command_queue );
+	ret = clReleaseContext( context );
+
+	free( M );
+	free( X );
+	free( Y );
+	free( Z );
+	free( newX );
+	free( newY );
+	free( newZ );
+	free( source_str );
+#pragma endregion
 }
 
 void gpu( info_t *info ) {
@@ -64,27 +195,17 @@ void gpu( info_t *info ) {
 	float *V = (float *) calloc( info->n, sizeof(float) );
 
 	clockStart = clock( );
-	// Device alokacija
-	cl_mem devX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
-	cl_mem devY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
-	cl_mem devZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
-	cl_mem devM = clCreateBuffer( context, CL_MEM_READ_ONLY, info->n*sizeof(float), NULL, &ret );
+	// Device alokacija in kopiranje podatkov
+	cl_mem devX = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), X, &ret );
+	cl_mem devY = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), Y, &ret );
+	cl_mem devZ = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), Z, &ret );
+	cl_mem devM = clCreateBuffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), M, &ret );
 	cl_mem devNewX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
 	cl_mem devNewY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
 	cl_mem devNewZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
-	cl_mem devVX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
-	cl_mem devVY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
-	cl_mem devVZ = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
-
-	// Kopiranje podatkov
-	ret = clEnqueueWriteBuffer( command_queue, devX, CL_TRUE, 0, info->n*sizeof(float), X, 0, NULL, NULL );
-	ret = clEnqueueWriteBuffer( command_queue, devY, CL_TRUE, 0, info->n*sizeof(float), Y, 0, NULL, NULL );
-	ret = clEnqueueWriteBuffer( command_queue, devZ, CL_TRUE, 0, info->n*sizeof(float), Z, 0, NULL, NULL );
-	ret = clEnqueueWriteBuffer( command_queue, devM, CL_TRUE, 0, info->n*sizeof(float), M, 0, NULL, NULL );
-	ret = clEnqueueWriteBuffer( command_queue, devVX, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
-	ret = clEnqueueWriteBuffer( command_queue, devVY, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
-	ret = clEnqueueWriteBuffer( command_queue, devVZ, CL_TRUE, 0, info->n*sizeof(float), V, 0, NULL, NULL );
-
+	cl_mem devVX = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), V, &ret );
+	cl_mem devVY = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), V, &ret );
+	cl_mem devVZ = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), V, &ret );
 
 	// Priprava programa
 	char *source_str = ReadKernelFromFile( "kernelFloat1.cl", NULL );
@@ -147,16 +268,11 @@ void gpu( info_t *info ) {
 	float *newX = (float*) malloc( info->n*sizeof(float) );
 	float *newY = (float*) malloc( info->n*sizeof(float) );
 	float *newZ = (float*) malloc( info->n*sizeof(float) );
-	/*ret = clEnqueueReadBuffer( command_queue, devNewX, CL_TRUE, 0, info->n*sizeof(float), newX, 0, NULL, NULL );
-	ret = clEnqueueReadBuffer( command_queue, devNewY, CL_TRUE, 0, info->n*sizeof(float), newY, 0, NULL, NULL );
-	ret = clEnqueueReadBuffer( command_queue, devNewZ, CL_TRUE, 0, info->n*sizeof(float), newZ, 0, NULL, NULL );*/
 	ret = clEnqueueReadBuffer( command_queue, devX, CL_TRUE, 0, info->n*sizeof(float), newX, 0, NULL, NULL );
 	ret = clEnqueueReadBuffer( command_queue, devY, CL_TRUE, 0, info->n*sizeof(float), newY, 0, NULL, NULL );
 	ret = clEnqueueReadBuffer( command_queue, devZ, CL_TRUE, 0, info->n*sizeof(float), newZ, 0, NULL, NULL );
 	clockEnd = clock( );
 
-
-	//checkResults( X, Y, Z, info->n );
 	printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );
 	checkResults( newX, newY, newZ, info->n );
 

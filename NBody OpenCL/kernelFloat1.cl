@@ -19,29 +19,26 @@ __kernel void kernelFloat1( __global float *X,
 	if( id < n ) {
 		int j;
 		float ax=0, ay=0, az=0, dx, dy, dz, invr, force;
-		float x = X[id];
-		float y = Y[id];
-		float z = Z[id];
+		float x = X[id], y = Y[id], z = Z[id];
 
 		for( j = 0; j < n; j++ ) {
 			dx = X[j] - x;
 			dy = Y[j] - y;
 			dz = Z[j] - z;
 
-			//Izvedemo trik brez uporabe if stavkov
 			invr = 1.0f / sqrt( dx*dx + dy*dy + dz*dz + eps );
 			force = kappa * M[j] * invr*invr*invr;
 
-			ax += force * dx; // izracun skupnega pospeska
+			ax += force * dx;
 			ay += force * dy;
 			az += force * dz;
 		}
-		float dt2 = dt*dt;
-		newX[id] = x + VX[id] * dt + 0.5f*ax*dt2; // nov polozaj za telo i
-		newY[id] = y + VY[id] * dt + 0.5f*ay*dt2;
-		newZ[id] = z + VZ[id] * dt + 0.5f*az*dt2;
+		float dt2 = dt*dt*0.5f;
+		newX[id] = x + VX[id] * dt + ax*dt2; // x = x + v*t + 0.5*a*t^2
+		newY[id] = y + VY[id] * dt + ay*dt2;
+		newZ[id] = z + VZ[id] * dt + az*dt2;
 
-		VX[id] += ax * dt; /* nova hitrost za telo i */
+		VX[id] += ax * dt;
 		VY[id] += ay * dt;
 		VZ[id] += az * dt;
 	}
