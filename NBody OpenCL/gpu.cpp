@@ -5,8 +5,15 @@
 
 #include "Main.h"
 
+#define SWAP_MEM(a,b) do {cl_mem temp=a; a=b; b=temp;} while(0)
+
 void swap( cl_mem *a, cl_mem *b ) {
 	cl_mem *temp = a;
+	a = b;
+	b = temp;
+}
+void swap( cl_mem a, cl_mem b ) {
+	cl_mem temp = a;
 	a = b;
 	b = temp;
 }
@@ -57,7 +64,6 @@ void gpu( info_t *info ) {
 	float *V = (float *) calloc( info->n, sizeof(float) );
 
 	clockStart = clock( );
-
 	// Device alokacija
 	cl_mem devX = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
 	cl_mem devY = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(float), NULL, &ret );
@@ -84,61 +90,58 @@ void gpu( info_t *info ) {
 	char *source_str = ReadKernelFromFile( "kernelFloat1.cl", NULL );
 	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
 	ret = clBuildProgram( program, 1, &device_id, NULL, NULL, NULL );	// Prevajanje
-	PrintBuildLog( &program, &device_id );
+	if( ret != CL_SUCCESS ) {
+		PrintBuildLog( &program, &device_id );
+		exit( 1 );
+	}
 
-	// priprava šèecpa
-	cl_kernel kernel = clCreateKernel( program, "kernelFloat1", &ret );
-	ret = clSetKernelArg( kernel, 0, sizeof(cl_mem), (void *) &devX );
-	ret |= clSetKernelArg( kernel, 1, sizeof(cl_mem), (void *) &devY );
-	ret |= clSetKernelArg( kernel, 2, sizeof(cl_mem), (void *) &devZ );
-	ret |= clSetKernelArg( kernel, 3, sizeof(cl_mem), (void *) &devNewX );
-	ret |= clSetKernelArg( kernel, 4, sizeof(cl_mem), (void *) &devNewY );
-	ret |= clSetKernelArg( kernel, 5, sizeof(cl_mem), (void *) &devNewZ );
-	ret |= clSetKernelArg( kernel, 6, sizeof(cl_mem), (void *) &devVX );
-	ret |= clSetKernelArg( kernel, 7, sizeof(cl_mem), (void *) &devVY );
-	ret |= clSetKernelArg( kernel, 8, sizeof(cl_mem), (void *) &devVZ );
-	ret |= clSetKernelArg( kernel, 9, sizeof(cl_mem), (void *) &devM );
-	ret |= clSetKernelArg( kernel, 10, sizeof(cl_int), (void *) &(info->n) );
-	ret |= clSetKernelArg( kernel, 11, sizeof(cl_float), (void *) &(info->eps) );
-	ret |= clSetKernelArg( kernel, 12, sizeof(cl_float), (void *) &(info->kappa) );
-	ret |= clSetKernelArg( kernel, 13, sizeof(cl_float), (void *) &(info->dt) );
+	// priprava šcepca EVEN
+	cl_kernel kernelEven = clCreateKernel( program, "kernelFloat1", &ret );
+	ret = clSetKernelArg( kernelEven, 0, sizeof(cl_mem), (void *) &devX );
+	ret |= clSetKernelArg( kernelEven, 1, sizeof(cl_mem), (void *) &devY );
+	ret |= clSetKernelArg( kernelEven, 2, sizeof(cl_mem), (void *) &devZ );
+	ret |= clSetKernelArg( kernelEven, 3, sizeof(cl_mem), (void *) &devNewX );
+	ret |= clSetKernelArg( kernelEven, 4, sizeof(cl_mem), (void *) &devNewY );
+	ret |= clSetKernelArg( kernelEven, 5, sizeof(cl_mem), (void *) &devNewZ );
+	ret |= clSetKernelArg( kernelEven, 6, sizeof(cl_mem), (void *) &devVX );
+	ret |= clSetKernelArg( kernelEven, 7, sizeof(cl_mem), (void *) &devVY );
+	ret |= clSetKernelArg( kernelEven, 8, sizeof(cl_mem), (void *) &devVZ );
+	ret |= clSetKernelArg( kernelEven, 9, sizeof(cl_mem), (void *) &devM );
+	ret |= clSetKernelArg( kernelEven, 10, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernelEven, 11, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernelEven, 12, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernelEven, 13, sizeof(cl_float), (void *) &(info->dt) );
+
+	// priprava šcepca ODD
+	cl_kernel kernelOdd = clCreateKernel( program, "kernelFloat1", &ret );
+	ret = clSetKernelArg( kernelOdd, 0, sizeof(cl_mem), (void *) &devNewX );
+	ret |= clSetKernelArg( kernelOdd, 1, sizeof(cl_mem), (void *) &devNewY );
+	ret |= clSetKernelArg( kernelOdd, 2, sizeof(cl_mem), (void *) &devNewZ );
+	ret |= clSetKernelArg( kernelOdd, 3, sizeof(cl_mem), (void *) &devX );
+	ret |= clSetKernelArg( kernelOdd, 4, sizeof(cl_mem), (void *) &devY );
+	ret |= clSetKernelArg( kernelOdd, 5, sizeof(cl_mem), (void *) &devZ );
+	ret |= clSetKernelArg( kernelOdd, 6, sizeof(cl_mem), (void *) &devVX );
+	ret |= clSetKernelArg( kernelOdd, 7, sizeof(cl_mem), (void *) &devVY );
+	ret |= clSetKernelArg( kernelOdd, 8, sizeof(cl_mem), (void *) &devVZ );
+	ret |= clSetKernelArg( kernelOdd, 9, sizeof(cl_mem), (void *) &devM );
+	ret |= clSetKernelArg( kernelOdd, 10, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernelOdd, 11, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernelOdd, 12, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernelOdd, 13, sizeof(cl_float), (void *) &(info->dt) );
 
 	// šcepec: zagon
-	ret = clEnqueueNDRangeKernel( command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &event );
-	clWaitForEvents( 1, &event );
-	// priprava šèecpa
-	//cl_kernel kernel = clCreateKernel( program, "kernelFloat1", &ret );
-	ret = clSetKernelArg( kernel, 0, sizeof(cl_mem), (void *) &devNewX );
-	ret |= clSetKernelArg( kernel, 1, sizeof(cl_mem), (void *) &devNewY );
-	ret |= clSetKernelArg( kernel, 2, sizeof(cl_mem), (void *) &devNewZ );
-	ret |= clSetKernelArg( kernel, 3, sizeof(cl_mem), (void *) &devX );
-	ret |= clSetKernelArg( kernel, 4, sizeof(cl_mem), (void *) &devY );
-	ret |= clSetKernelArg( kernel, 5, sizeof(cl_mem), (void *) &devZ );
-	ret |= clSetKernelArg( kernel, 6, sizeof(cl_mem), (void *) &devVX );
-	ret |= clSetKernelArg( kernel, 7, sizeof(cl_mem), (void *) &devVY );
-	ret |= clSetKernelArg( kernel, 8, sizeof(cl_mem), (void *) &devVZ );
-	ret |= clSetKernelArg( kernel, 9, sizeof(cl_mem), (void *) &devM );
-	ret |= clSetKernelArg( kernel, 10, sizeof(cl_int), (void *) &(info->n) );
-	ret |= clSetKernelArg( kernel, 11, sizeof(cl_float), (void *) &(info->eps) );
-	ret |= clSetKernelArg( kernel, 12, sizeof(cl_float), (void *) &(info->kappa) );
-	ret |= clSetKernelArg( kernel, 13, sizeof(cl_float), (void *) &(info->dt) );
+	for( int i = 0; i < info->steps; i++ ) {
+		if( i%2 == 0 )
+			ret = clEnqueueNDRangeKernel( command_queue, kernelEven, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL);
+		else
+			ret = clEnqueueNDRangeKernel( command_queue, kernelOdd, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
+	}
 
-	// šcepec: zagon
-	ret = clEnqueueNDRangeKernel( command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
-	
-	/*for( int i = 0; i < info->steps; i++ ) {
-		ret = clEnqueueNDRangeKernel( command_queue, kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
-		swap( &devX, &devNewX );
-		swap( &devY, &devNewY );
-		swap( &devZ, &devNewZ );
-		ret = clSetKernelArg( kernel, 0, sizeof(cl_mem), (void *) &devX );
-		ret |= clSetKernelArg( kernel, 1, sizeof(cl_mem), (void *) &devY );
-		ret |= clSetKernelArg( kernel, 2, sizeof(cl_mem), (void *) &devZ );
-		ret |= clSetKernelArg( kernel, 3, sizeof(cl_mem), (void *) &devNewX );
-		ret |= clSetKernelArg( kernel, 4, sizeof(cl_mem), (void *) &devNewY );
-		ret |= clSetKernelArg( kernel, 5, sizeof(cl_mem), (void *) &devNewZ );
-	}*/
-
+	if( info->steps % 2 != 0 ) {
+		SWAP_MEM( devNewX, devX );
+		SWAP_MEM( devNewY, devY );
+		SWAP_MEM( devNewZ, devZ );
+	}
 
 	// Prenos rezultatov na gostitelja
 	float *newX = (float*) malloc( info->n*sizeof(float) );
@@ -160,7 +163,8 @@ void gpu( info_t *info ) {
 #pragma region Cleanup
 	ret = clFlush( command_queue );
 	ret = clFinish( command_queue );
-	ret = clReleaseKernel( kernel );
+	ret = clReleaseKernel( kernelEven );
+	ret = clReleaseKernel( kernelOdd );
 	ret = clReleaseProgram( program );
 	ret = clReleaseMemObject( devX );
 	ret = clReleaseMemObject( devY );

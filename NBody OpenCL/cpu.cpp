@@ -30,8 +30,6 @@ void cpu( info_t *info ) {
 		vx[i] = vy[i] = vz[i] = 0.0;	//zacetno hitrost nastavimo na 0
 		m[i] = info->mass;
 	}
-	checkResults( x, y, z, info->n );
-
 
 	clockStart = clock( );
 	for( s = 0; s < info->steps; s++ ) {
@@ -63,7 +61,6 @@ void cpu( info_t *info ) {
 		SWAP( ynew, y );
 		SWAP( znew, z );
 	}
-
 	clockEnd = clock( );
 
 	printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );

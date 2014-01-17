@@ -11,7 +11,7 @@ int cpuO( int argc, char *argv[] );
 int main( int argc, char **argv ) {
 	info_t info;
 	info.n = 1000; 				
-	info.steps = 2; 		//10	
+	info.steps = 100; 		//10	
 	info.sphereRadius = 10; 	
 	info.kappa = 1; 			
 	info.mass = 1; 			

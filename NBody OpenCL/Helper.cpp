@@ -22,6 +22,7 @@ double checkResults( double *X, double *Y, double *Z, int len ) {
 	free( sums );
 	return sum;
 }
+
 float checkResults( float *X, float *Y, float *Z, int len ) {
 	float sum = 0;
 	float *sums = (float*) malloc( len * sizeof(float) );
@@ -31,7 +32,7 @@ float checkResults( float *X, float *Y, float *Z, int len ) {
 	}
 	printf( "Result check: %f [", sum );
 	
-	for( int i = 0; i < 10; i++ ) {
+	for( int i = 0; i < 5; i++ ) {
 		printf( "%f ", sums[i] );
 	}
 	printf( "]\n" );
