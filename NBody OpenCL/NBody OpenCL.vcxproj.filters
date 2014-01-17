@@ -46,5 +46,8 @@
     <None Include="kernelSyncTest.cl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="kernelVec.cl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

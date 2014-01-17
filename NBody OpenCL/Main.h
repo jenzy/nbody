@@ -26,6 +26,7 @@ void cpu( info_t *info );
 // gpu.cpp
 void gpu( info_t *info );
 void gpuSyncInKernelTest( info_t *info );
+void gpuVec( info_t *info );
 
 // Helper.cpp
 double checkResults( double *X, double *Y, double *Z, int len );

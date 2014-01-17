@@ -1,6 +1,6 @@
 #define SWAP(a,b) do {__global float *temp=a; a=b; b=temp;} while(0)
 
-__kernel void kernelFloat1( __global float *X,
+__kernel void kernelSyncTest( __global float *X,
 							__global float *Y,
 							__global float *Z,
 							__global float *newX,

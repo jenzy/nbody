@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <CL/cl.h>
+#include <CL/cl_platform.h>
 #include <time.h>
 
 #include "Main.h"
@@ -85,7 +86,7 @@ void gpuSyncInKernelTest( info_t *info ) {
 	}
 
 	// priprava šcepca EVEN
-	cl_kernel kernelEven = clCreateKernel( program, "kernelFloat1", &ret );
+	cl_kernel kernelEven = clCreateKernel( program, "kernelSyncTest", &ret );
 	ret = clSetKernelArg( kernelEven, 0, sizeof(cl_mem), (void *) &devX );
 	ret |= clSetKernelArg( kernelEven, 1, sizeof(cl_mem), (void *) &devY );
 	ret |= clSetKernelArg( kernelEven, 2, sizeof(cl_mem), (void *) &devZ );
@@ -305,122 +306,144 @@ void gpu( info_t *info ) {
 	free( source_str );
 #pragma endregion
 }
-/*
-void gpu( void ) {
-	int i;
-	cl_int ret;
 
-	int vectorSize = SIZE;
+void gpuVec( info_t *info ) {
+	cl_int	ret;
+	char *buf = nullptr;
+	clock_t clockStart, clockEnd;
+	cl_event event;
 
-	// Inicializacija vektorjev
-	double *A = (double*) malloc( vectorSize*sizeof(double) );
-	double *B = (double*) malloc( vectorSize*sizeof(double) );
-	for( i = 0; i < vectorSize; i++ ) {
-		A[i] = i;
-		B[i] = vectorSize - i;
-	}
-	// Podatki o platformi
-	cl_platform_id	platform_id;
-	cl_uint			ret_num_platforms;
+	printf( "\n\n== OpenCL ==\n" );
 
-	ret = clGetPlatformIDs( 1, &platform_id, &ret_num_platforms );
+#pragma region OpenCL Inicializacija
+	// Platforma
+	cl_platform_id platform_id = nullptr;
+	ret = clGetPlatformIDs( 1, &platform_id, NULL );
+	buf = GetPlatformName( &platform_id );
+	printf( "Platforma: %s\n", buf );
+	free( buf );
 
 	// Naprava 
-	cl_device_id	device_id[2];
-	cl_uint			ret_num_devices;
-	size_t buf_len;
-	char *buf;
-	ret = clGetDeviceIDs( platform_id, CL_DEVICE_TYPE_ALL, 2,// izbrana platforma, naprava (najprej GPU, "ce je ni CPU), koliko naprav nas
-						  device_id, &ret_num_devices );				// zanima, kazalec na naprave, dejansko "stevilo platform
-	for( i = 0; i<ret_num_devices; i++ ) {
-		ret = clGetDeviceInfo( device_id[i], CL_DEVICE_NAME, 0, NULL, &buf_len );
-		buf = (char *) malloc( sizeof(char) *(buf_len + 1) );
-		buf[buf_len] = '\0';
-		ret = clGetDeviceInfo( device_id[i], CL_DEVICE_NAME, buf_len, buf, NULL );
-		printf( "naprava: %s\n", buf );
-		free( buf );
+	cl_device_id device_id;
+	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
+	buf = GetDeviceName( &device_id );
+	printf( "Naprava: %s\n", buf );
+	free( buf );
+
+	cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
+	cl_command_queue command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
+#pragma endregion
+
+#pragma region Delitev dela
+	// Delitev dela
+	size_t local_item_size = 256;
+	size_t num_groups = ((info->n - 1) / local_item_size + 1);
+	size_t global_item_size = num_groups*local_item_size;
+	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d)\n", local_item_size, num_groups, global_item_size, info->n );
+#pragma endregion
+
+	// Host alokacija
+	float *M = (float *) malloc( sizeof(float) * info->n );
+	float *X = (float *) malloc( sizeof(float) * info->n );
+	float *Y = (float *) malloc( sizeof(float) * info->n );
+	float *Z = (float *) malloc( sizeof(float) * info->n );
+	generateCoordinates( X, Y, Z, info );
+	for( int i = 0; i < info->n; i++ )
+		M[i] = info->mass;
+	float *V = (float *) calloc( info->n, 4*sizeof(float) );
+
+	float *Coord = (float*) calloc( sizeof(float), 4*info->n );
+	for( int i = 0; i < info->n; i++ ) {
+		Coord[4 * i] = X[i];
+		Coord[4 * i + 1] = Y[i];
+		Coord[4 * i + 2] = Z[i];
 	}
 
-	// Kontekst
-	cl_context context = clCreateContext( NULL, 1, &device_id[1], NULL, NULL, &ret );
-
-	// Ukazna vrsta
-	cl_command_queue command_queue = clCreateCommandQueue( context, device_id[1], 0, &ret );
-
-	// Delitev dela
-	size_t local_item_size = 64;
-	size_t num_groups = ((vectorSize - 1) / local_item_size + 1);
-	size_t global_item_size = num_groups*local_item_size;
-
-	// Alokacija pomnilnika
-	cl_mem a_mem_obj = clCreateBuffer( context, CL_MEM_READ_ONLY,
-									   vectorSize*sizeof(double), NULL, &ret );
-	cl_mem b_mem_obj = clCreateBuffer( context, CL_MEM_READ_ONLY,
-									   vectorSize*sizeof(double), NULL, &ret );
-	cl_mem c_mem_obj = clCreateBuffer( context, CL_MEM_WRITE_ONLY,
-									   vectorSize*sizeof(double), NULL, &ret );
-
-	// Kopiranje podatkov
-	ret = clEnqueueWriteBuffer( command_queue, a_mem_obj, CL_TRUE, 0,
-								vectorSize*sizeof(double), A, 0, NULL, NULL );
-	ret = clEnqueueWriteBuffer( command_queue, b_mem_obj, CL_TRUE, 0,
-								vectorSize*sizeof(double), B, 0, NULL, NULL );
+	clockStart = clock( );
+	// Device alokacija in kopiranje podatkov
+	cl_mem devCoord = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), Coord, &ret );
+	cl_mem devM = clCreateBuffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), M, &ret );
+	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(cl_float4), NULL, &ret );
+	cl_mem devV = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), V, &ret );
 
 	// Priprava programa
-	char *source_str = ReadKernelFromFile( "kernel.cl", NULL );
-	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str,
-													NULL, &ret );
+	char *source_str = ReadKernelFromFile( "kernelVec.cl", NULL );
+	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
+	ret = clBuildProgram( program, 1, &device_id, NULL, NULL, NULL );	// Prevajanje
+	if( ret != CL_SUCCESS ) {
+		PrintBuildLog( &program, &device_id );
+		exit( 1 );
+	}
 
-	// Prevajanje
-	ret = clBuildProgram( program, 1, &device_id[1], NULL, NULL, NULL );
+	// priprava šcepca EVEN
+	cl_kernel kernelEven = clCreateKernel( program, "kernelVec", &ret );
+	ret = clSetKernelArg( kernelEven, 0, sizeof(cl_mem), (void *) &devCoord );
+	ret |= clSetKernelArg( kernelEven, 1, sizeof(cl_mem), (void *) &devCoordNew );
+	ret |= clSetKernelArg( kernelEven, 2, sizeof(cl_mem), (void *) &devV );;
+	ret |= clSetKernelArg( kernelEven, 3, sizeof(cl_mem), (void *) &devM );
+	ret |= clSetKernelArg( kernelEven, 4, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernelEven, 5, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernelEven, 6, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernelEven, 7, sizeof(cl_float), (void *) &(info->dt) );
 
-	
-	// kazalec na funkcijo, uporabni"ski argumenti
-	size_t build_log_len;
-	char *log, ch;
-	ret = clGetProgramBuildInfo( program, device_id[1], CL_PROGRAM_BUILD_LOG, 0, NULL, &build_log_len );
-	log = (char *) malloc( sizeof(char) *(build_log_len + 1) );
-	ret = clGetProgramBuildInfo( program, device_id[1], CL_PROGRAM_BUILD_LOG, build_log_len, log, NULL );
-	printf( "Build log: %s\n", log );
-	free( log );
-	getchar( );
+	// priprava šcepca ODD
+	cl_kernel kernelOdd = clCreateKernel( program, "kernelVec", &ret );
+	ret |= clSetKernelArg( kernelOdd, 0, sizeof(cl_mem), (void *) &devCoordNew );
+	ret |= clSetKernelArg( kernelOdd, 1, sizeof(cl_mem), (void *) &devCoord );
+	ret |= clSetKernelArg( kernelOdd, 2, sizeof(cl_mem), (void *) &devV );
+	ret |= clSetKernelArg( kernelOdd, 3, sizeof(cl_mem), (void *) &devM );
+	ret |= clSetKernelArg( kernelOdd, 4, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernelOdd, 5, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernelOdd, 6, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernelOdd, 7, sizeof(cl_float), (void *) &(info->dt) );
 
-	// "s"cepca: priprava objekta
-	cl_kernel kernel = clCreateKernel( program, "vector_add", &ret );
+	// šcepec: zagon
+	for( int i = 0; i < info->steps; i++ ) {
+		if( i % 2 == 0 )
+			ret = clEnqueueNDRangeKernel( command_queue, kernelEven, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
+		else
+			ret = clEnqueueNDRangeKernel( command_queue, kernelOdd, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
+	}
 
-	// "s"cepca: argumenti
-	ret = clSetKernelArg( kernel, 0, sizeof(cl_mem), (void *) &a_mem_obj );
-	ret |= clSetKernelArg( kernel, 1, sizeof(cl_mem), (void *) &b_mem_obj );
-	ret |= clSetKernelArg( kernel, 2, sizeof(cl_mem), (void *) &c_mem_obj );
-	ret |= clSetKernelArg( kernel, 3, sizeof(cl_int), (void *) &vectorSize );
-
-	// "s"cepec: zagon
-	ret = clEnqueueNDRangeKernel( command_queue, kernel, 1, NULL,
-								  &global_item_size, &local_item_size, 0, NULL, NULL );
-
+	if( info->steps % 2 != 0 ) 
+		SWAP_MEM( devCoord, devCoordNew);
 
 	// Prenos rezultatov na gostitelja
-	double *C = (double*) malloc( vectorSize*sizeof(double) );
-	ret = clEnqueueReadBuffer( command_queue, c_mem_obj, CL_TRUE, 0,
-							   vectorSize*sizeof(double), C, 0, NULL, NULL );
+	float *newCoord = (float*) malloc( 4*info->n*sizeof(float) );
+	clockEnd = clock( );
+	ret = clEnqueueReadBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), newCoord, 0, NULL, NULL );
+	float *newX = (float*) malloc( info->n*sizeof(float) );
+	float *newY = (float*) malloc( info->n*sizeof(float) );
+	float *newZ = (float*) malloc( info->n*sizeof(float) );
+	for( int i = 0; i < info->n; i++ ) {
+		newX[i] = newCoord[4 * i];
+		newY[i] = newCoord[4 * i + 1];
+		newZ[i] = newCoord[4 * i + 2];
+	}
 
-	// Prikaz rezultatov
-	for( i = 0; i < vectorSize; i++ )
-		printf( "%lf + %lf = %lf\n", A[i], B[i], C[i] );
+	printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );
+	checkResults( newX, newY, newZ, info->n );
 
-	// "ci"s"cenje
+#pragma region Cleanup
 	ret = clFlush( command_queue );
 	ret = clFinish( command_queue );
-	ret = clReleaseKernel( kernel );
+	ret = clReleaseKernel( kernelEven );
+	ret = clReleaseKernel( kernelOdd );
 	ret = clReleaseProgram( program );
-	ret = clReleaseMemObject( a_mem_obj );
-	ret = clReleaseMemObject( b_mem_obj );
-	ret = clReleaseMemObject( c_mem_obj );
+	ret = clReleaseMemObject( devM );
+	ret = clReleaseMemObject( devV );
+	ret = clReleaseMemObject( devCoord );
+	ret = clReleaseMemObject( devCoordNew );
 	ret = clReleaseCommandQueue( command_queue );
 	ret = clReleaseContext( context );
 
-	free( A );
-	free( B );
-	free( C );
+	free( M );
+	free( X );
+	free( Y );
+	free( Z );
+	free( newX );
+	free( newY );
+	free( newZ );
+	free( source_str );
+#pragma endregion
 }
-*/

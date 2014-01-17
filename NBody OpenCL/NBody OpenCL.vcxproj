@@ -162,6 +162,7 @@
   <ItemGroup>
     <None Include="kernelSyncTest.cl" />
     <None Include="kernelFloat1.cl" />
+    <None Include="kernelVec.cl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

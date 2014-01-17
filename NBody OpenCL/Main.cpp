@@ -21,7 +21,8 @@ int main( int argc, char **argv ) {
 
 	info.deviceType = CL_DEVICE_TYPE_GPU;
 
-	cpu( &info );
+	//cpu( &info );
 	gpu( &info );
+	gpuVec( &info );
 
 }
