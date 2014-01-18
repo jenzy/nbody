@@ -9,8 +9,8 @@
 
 int main( int argc, char **argv ) {
 	info_t info;
-	info.n = 4; 				
-	info.steps = 2; 		//10	
+	info.n = 1000; 				
+	info.steps = 100; 		//10	
 	info.sphereRadius = 10; 
 	info.kappa = 1; 			
 	info.mass = 1; 			
@@ -26,6 +26,9 @@ int main( int argc, char **argv ) {
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
 	mpi( &info );
+
+	MPI_Barrier( MPI_COMM_WORLD );
+	fflush( stdout );
 
 	if( rank == 0 ) {
 		cpu( &info );
