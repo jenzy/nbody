@@ -31,8 +31,10 @@ void gpuVec( info_t *info );
 // Helper.cpp
 double checkResults( double *X, double *Y, double *Z, int len );
 float checkResults( float *X, float *Y, float *Z, int len );
+float checkResultsFloat4( float *coord, int len );
 void generateCoordinates( double *X, double *Y, double *Z, info_t *info );
 void generateCoordinates( float *X, float *Y, float *Z, info_t *info );
+void generateCoordinatesFloat4( float *coord, info_t *info );
 
 // HelperOpenCL.cpp
 void clinfo( );

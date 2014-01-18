@@ -191,7 +191,7 @@ void gpu( info_t *info ) {
 	float *Y = (float *) malloc( sizeof(float) * info->n );
 	float *Z = (float *) malloc( sizeof(float) * info->n );
 	generateCoordinates( X, Y, Z, info );
-	for( int i = 0; i < info->n; i++ ) 
+	for( int i = 0; i < info->n; i++ )
 		M[i] = info->mass;
 	float *V = (float *) calloc( info->n, sizeof(float) );
 
@@ -311,9 +311,7 @@ void gpuVec( info_t *info ) {
 	cl_int	ret;
 	char *buf = nullptr;
 	clock_t clockStart, clockEnd;
-	cl_event event;
-
-	printf( "\n\n== OpenCL ==\n" );
+	printf( "\n\n== OpenCL (float4) ==\n" );
 
 #pragma region OpenCL Inicializacija
 	// Platforma
@@ -343,29 +341,17 @@ void gpuVec( info_t *info ) {
 #pragma endregion
 
 	// Host alokacija
-	float *M = (float *) malloc( sizeof(float) * info->n );
-	float *X = (float *) malloc( sizeof(float) * info->n );
-	float *Y = (float *) malloc( sizeof(float) * info->n );
-	float *Z = (float *) malloc( sizeof(float) * info->n );
-	generateCoordinates( X, Y, Z, info );
-	for( int i = 0; i < info->n; i++ )
-		M[i] = info->mass;
+	float *Coord = (float*) malloc( sizeof(float) * 4 * info->n );
 	float *V = (float *) calloc( info->n, 4*sizeof(float) );
-
-	float *Coord = (float*) calloc( sizeof(float), 4*info->n );
-	for( int i = 0; i < info->n; i++ ) {
-		Coord[4 * i] = X[i];
-		Coord[4 * i + 1] = Y[i];
-		Coord[4 * i + 2] = Z[i];
-	}
+	generateCoordinatesFloat4( Coord, info );
 
 	clockStart = clock( );
 	// Device alokacija in kopiranje podatkov
 	cl_mem devCoord = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), Coord, &ret );
-	cl_mem devM = clCreateBuffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), M, &ret );
 	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(cl_float4), NULL, &ret );
 	cl_mem devV = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), V, &ret );
 
+#pragma region Prevajanje kernela
 	// Priprava programa
 	char *source_str = ReadKernelFromFile( "kernelVec.cl", NULL );
 	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
@@ -374,28 +360,27 @@ void gpuVec( info_t *info ) {
 		PrintBuildLog( &program, &device_id );
 		exit( 1 );
 	}
+#pragma endregion
 
 	// priprava šcepca EVEN
 	cl_kernel kernelEven = clCreateKernel( program, "kernelVec", &ret );
 	ret = clSetKernelArg( kernelEven, 0, sizeof(cl_mem), (void *) &devCoord );
 	ret |= clSetKernelArg( kernelEven, 1, sizeof(cl_mem), (void *) &devCoordNew );
-	ret |= clSetKernelArg( kernelEven, 2, sizeof(cl_mem), (void *) &devV );;
-	ret |= clSetKernelArg( kernelEven, 3, sizeof(cl_mem), (void *) &devM );
-	ret |= clSetKernelArg( kernelEven, 4, sizeof(cl_int), (void *) &(info->n) );
-	ret |= clSetKernelArg( kernelEven, 5, sizeof(cl_float), (void *) &(info->eps) );
-	ret |= clSetKernelArg( kernelEven, 6, sizeof(cl_float), (void *) &(info->kappa) );
-	ret |= clSetKernelArg( kernelEven, 7, sizeof(cl_float), (void *) &(info->dt) );
+	ret |= clSetKernelArg( kernelEven, 2, sizeof(cl_mem), (void *) &devV );
+	ret |= clSetKernelArg( kernelEven, 3, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernelEven, 4, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernelEven, 5, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernelEven, 6, sizeof(cl_float), (void *) &(info->dt) );
 
 	// priprava šcepca ODD
 	cl_kernel kernelOdd = clCreateKernel( program, "kernelVec", &ret );
 	ret |= clSetKernelArg( kernelOdd, 0, sizeof(cl_mem), (void *) &devCoordNew );
 	ret |= clSetKernelArg( kernelOdd, 1, sizeof(cl_mem), (void *) &devCoord );
 	ret |= clSetKernelArg( kernelOdd, 2, sizeof(cl_mem), (void *) &devV );
-	ret |= clSetKernelArg( kernelOdd, 3, sizeof(cl_mem), (void *) &devM );
-	ret |= clSetKernelArg( kernelOdd, 4, sizeof(cl_int), (void *) &(info->n) );
-	ret |= clSetKernelArg( kernelOdd, 5, sizeof(cl_float), (void *) &(info->eps) );
-	ret |= clSetKernelArg( kernelOdd, 6, sizeof(cl_float), (void *) &(info->kappa) );
-	ret |= clSetKernelArg( kernelOdd, 7, sizeof(cl_float), (void *) &(info->dt) );
+	ret |= clSetKernelArg( kernelOdd, 3, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( kernelOdd, 4, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( kernelOdd, 5, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( kernelOdd, 6, sizeof(cl_float), (void *) &(info->dt) );
 
 	// šcepec: zagon
 	for( int i = 0; i < info->steps; i++ ) {
@@ -404,25 +389,15 @@ void gpuVec( info_t *info ) {
 		else
 			ret = clEnqueueNDRangeKernel( command_queue, kernelOdd, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
 	}
-
 	if( info->steps % 2 != 0 ) 
 		SWAP_MEM( devCoord, devCoordNew);
 
 	// Prenos rezultatov na gostitelja
-	float *newCoord = (float*) malloc( 4*info->n*sizeof(float) );
+	ret = clEnqueueReadBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), Coord, 0, NULL, NULL );
 	clockEnd = clock( );
-	ret = clEnqueueReadBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), newCoord, 0, NULL, NULL );
-	float *newX = (float*) malloc( info->n*sizeof(float) );
-	float *newY = (float*) malloc( info->n*sizeof(float) );
-	float *newZ = (float*) malloc( info->n*sizeof(float) );
-	for( int i = 0; i < info->n; i++ ) {
-		newX[i] = newCoord[4 * i];
-		newY[i] = newCoord[4 * i + 1];
-		newZ[i] = newCoord[4 * i + 2];
-	}
 
 	printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );
-	checkResults( newX, newY, newZ, info->n );
+	checkResultsFloat4( Coord, info->n );
 
 #pragma region Cleanup
 	ret = clFlush( command_queue );
@@ -430,20 +405,14 @@ void gpuVec( info_t *info ) {
 	ret = clReleaseKernel( kernelEven );
 	ret = clReleaseKernel( kernelOdd );
 	ret = clReleaseProgram( program );
-	ret = clReleaseMemObject( devM );
 	ret = clReleaseMemObject( devV );
 	ret = clReleaseMemObject( devCoord );
 	ret = clReleaseMemObject( devCoordNew );
 	ret = clReleaseCommandQueue( command_queue );
 	ret = clReleaseContext( context );
 
-	free( M );
-	free( X );
-	free( Y );
-	free( Z );
-	free( newX );
-	free( newY );
-	free( newZ );
+	free( V );
+	free( Coord );
 	free( source_str );
 #pragma endregion
 }

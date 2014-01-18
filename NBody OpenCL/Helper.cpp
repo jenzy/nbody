@@ -27,11 +27,32 @@ float checkResults( float *X, float *Y, float *Z, int len ) {
 	float sum = 0;
 	float *sums = (float*) malloc( len * sizeof(float) );
 	for( int i = 0; i < len; i++ ) {
-		sum += X[i] + Y[i] + Z[i];
 		sums[i] = X[i] + Y[i] + Z[i];
+		sum += sums[i];
 	}
 	printf( "Result check: %f [", sum );
 	
+	for( int i = 0; i < 5; i++ ) {
+		printf( "%f ", sums[i] );
+	}
+	printf( "]\n" );
+	free( sums );
+	return sum;
+}
+
+float checkResultsFloat4( float *coord, int len ) {
+	float sum = 0;
+	float *sums = (float*) malloc( len * sizeof(float) );
+	for( int i = 0; i < len; i++ ) {
+		int index = 4 * i;
+		float x = coord[index];
+		float y = coord[index + 1];
+		float z = coord[index + 2];
+		sums[i] = x + y + z;
+		sum += sums[i];
+	}
+	printf( "Result check: %f [", sum );
+
 	for( int i = 0; i < 5; i++ ) {
 		printf( "%f ", sums[i] );
 	}
@@ -69,5 +90,22 @@ void generateCoordinates( float *X, float *Y, float *Z, info_t *info ) {
 		X[i] = cos( fiz ) * cos( fiy ) * info->sphereRadius;
 		Y[i] = -sin( fiz ) * cos( fiy ) * info->sphereRadius;
 		Z[i] = -sin( fiy ) * info->sphereRadius;
+	}
+}
+void generateCoordinatesFloat4( float *coord, info_t *info ) {
+	float fix, fiy, fiz;
+	int index;
+
+	srand( info->seed );
+	for( int i = 0; i < info->n; i++ ) {
+		fix = 2 * M_PI*rand( ) / (float) RAND_MAX;
+		fiy = 2 * M_PI*rand( ) / (float) RAND_MAX;
+		fiz = 2 * M_PI*rand( ) / (float) RAND_MAX;
+
+		index = i * 4;
+		coord[index] = cos( fiz ) * cos( fiy ) * info->sphereRadius;
+		coord[index + 1] = -sin( fiz ) * cos( fiy ) * info->sphereRadius;
+		coord[index + 2] = -sin( fiy ) * info->sphereRadius;
+		coord[index + 3] = info->mass;
 	}
 }

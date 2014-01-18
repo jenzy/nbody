@@ -6,8 +6,6 @@
 
 #include "Main.h"
 
-int cpuO( int argc, char *argv[] );
-
 int main( int argc, char **argv ) {
 	info_t info;
 	info.n = 1000; 				
