@@ -9,7 +9,7 @@
 int main( int argc, char **argv ) {
 	info_t info;
 	info.n = 1000; 				
-	info.steps = 100; 		//10	
+	info.steps = 1000; 		//10	
 	info.sphereRadius = 10; 
 	info.kappa = 1; 			
 	info.mass = 1; 			
@@ -18,9 +18,11 @@ int main( int argc, char **argv ) {
 	info.seed = 42;
 
 	info.deviceType = CL_DEVICE_TYPE_GPU;
+	info.local_item_size = 64;
 
 	//cpu( &info );
-	gpu( &info );
+	//gpu( &info );
 	gpuVec( &info );
+	gpuVecLocal( &info );
 
 }

@@ -18,6 +18,7 @@ typedef struct _info {
 	int seed;				/* seed za random */
 
 	cl_device_type deviceType;
+	size_t local_item_size;
 } info_t;
 
 // cpu.cpp
@@ -27,6 +28,7 @@ void cpu( info_t *info );
 void gpu( info_t *info );
 void gpuSyncInKernelTest( info_t *info );
 void gpuVec( info_t *info );
+void gpuVecLocal( info_t *info );
 
 // Helper.cpp
 double checkResults( double *X, double *Y, double *Z, int len );
