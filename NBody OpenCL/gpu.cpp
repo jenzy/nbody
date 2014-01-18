@@ -12,7 +12,6 @@ void gpuSyncInKernelTest( info_t *info ) {
 	cl_int	ret;
 	char *buf = nullptr;
 	clock_t clockStart, clockEnd;
-	cl_event event;
 
 	printf( "\n\n== OpenCL (Sync in Kernel Test) ==\n" );
 
@@ -152,26 +151,16 @@ void gpuSyncInKernelTest( info_t *info ) {
 
 void gpu( info_t *info ) {
 	cl_int	ret;
-	char *buf = nullptr;
 	clock_t clockStart, clockEnd;
-	cl_event event;
-
 	printf( "\n\n== OpenCL ==\n" );
 
 #pragma region OpenCL Inicializacija
-	// Platforma
+	// Platforma in naprava
 	cl_platform_id platform_id = nullptr;
 	ret = clGetPlatformIDs( 1, &platform_id, NULL );
-	buf = GetPlatformName( &platform_id );
-	printf( "Platforma: %s\n", buf );
-	free( buf );
-	
-	// Naprava 
 	cl_device_id device_id;
 	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
-	buf = GetDeviceName( &device_id );
-	printf( "Naprava: %s\n", buf );
-	free( buf );
+	PrintDeviceInfo( &platform_id, &device_id );
 
 	cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
 	cl_command_queue command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
@@ -182,7 +171,7 @@ void gpu( info_t *info ) {
 	size_t local_item_size = info->local_item_size;
 	size_t num_groups = ((info->n - 1) / local_item_size + 1);
 	size_t global_item_size = num_groups*local_item_size;
-	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d)\n", local_item_size, num_groups, global_item_size, info->n );
+	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d, steps: %d)\n", local_item_size, num_groups, global_item_size, info->n, info->steps );
 #pragma endregion
 
 	// Host alokacija
@@ -209,14 +198,9 @@ void gpu( info_t *info ) {
 	cl_mem devVZ = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(float), V, &ret );
 
 	// Priprava programa
-	char *source_str = ReadKernelFromFile( "kernelFloat1.cl", NULL );
-	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
-	ret = clBuildProgram( program, 1, &device_id, NULL, NULL, NULL );	// Prevajanje
-	if( ret != CL_SUCCESS ) {
-		PrintBuildLog( &program, &device_id );
-		exit( 1 );
-	}
-
+	cl_program program;
+	BuildKernel( &program, &context, &device_id, "kernelFloat1.cl" );
+	
 	// priprava šcepca EVEN
 	cl_kernel kernelEven = clCreateKernel( program, "kernelFloat1", &ret );
 	ret = clSetKernelArg( kernelEven, 0, sizeof(cl_mem), (void *) &devX );
@@ -303,30 +287,21 @@ void gpu( info_t *info ) {
 	free( newX );
 	free( newY );
 	free( newZ );
-	free( source_str );
 #pragma endregion
 }
 
 void gpuVec( info_t *info ) {
 	cl_int	ret;
-	char *buf = nullptr;
 	clock_t clockStart, clockEnd;
 	printf( "\n\n== OpenCL (float4) ==\n" );
 
 #pragma region OpenCL Inicializacija
-	// Platforma
+	// Platforma in naprava
 	cl_platform_id platform_id = nullptr;
 	ret = clGetPlatformIDs( 1, &platform_id, NULL );
-	buf = GetPlatformName( &platform_id );
-	printf( "Platforma: %s\n", buf );
-	free( buf );
-
-	// Naprava 
 	cl_device_id device_id;
 	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
-	buf = GetDeviceName( &device_id );
-	printf( "Naprava: %s\n", buf );
-	free( buf );
+	PrintDeviceInfo( &platform_id, &device_id );
 
 	cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
 	cl_command_queue command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
@@ -337,7 +312,7 @@ void gpuVec( info_t *info ) {
 	size_t local_item_size = info->local_item_size;
 	size_t num_groups = ((info->n - 1) / local_item_size + 1);
 	size_t global_item_size = num_groups*local_item_size;
-	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d)\n", local_item_size, num_groups, global_item_size, info->n );
+	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d, steps: %d)\n", local_item_size, num_groups, global_item_size, info->n, info->steps );
 #pragma endregion
 
 	// Host alokacija
@@ -351,46 +326,24 @@ void gpuVec( info_t *info ) {
 	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(cl_float4), NULL, &ret );
 	cl_mem devV = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), V, &ret );
 
-#pragma region Prevajanje kernela
 	// Priprava programa
-	char *source_str = ReadKernelFromFile( "kernelVec.cl", NULL );
-	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
-	ret = clBuildProgram( program, 1, &device_id, NULL, NULL, NULL );	// Prevajanje
-	if( ret != CL_SUCCESS ) {
-		PrintBuildLog( &program, &device_id );
-		exit( 1 );
-	}
-#pragma endregion
+	cl_program program;
+	BuildKernel( &program, &context, &device_id, "kernelVec.cl" );
 
-	// priprava šcepca EVEN
-	cl_kernel kernelEven = clCreateKernel( program, "kernelVec", &ret );
-	ret = clSetKernelArg( kernelEven, 0, sizeof(cl_mem), (void *) &devCoord );
-	ret |= clSetKernelArg( kernelEven, 1, sizeof(cl_mem), (void *) &devCoordNew );
-	ret |= clSetKernelArg( kernelEven, 2, sizeof(cl_mem), (void *) &devV );
-	ret |= clSetKernelArg( kernelEven, 3, sizeof(cl_int), (void *) &(info->n) );
-	ret |= clSetKernelArg( kernelEven, 4, sizeof(cl_float), (void *) &(info->eps) );
-	ret |= clSetKernelArg( kernelEven, 5, sizeof(cl_float), (void *) &(info->kappa) );
-	ret |= clSetKernelArg( kernelEven, 6, sizeof(cl_float), (void *) &(info->dt) );
-
-	// priprava šcepca ODD
-	cl_kernel kernelOdd = clCreateKernel( program, "kernelVec", &ret );
-	ret |= clSetKernelArg( kernelOdd, 0, sizeof(cl_mem), (void *) &devCoordNew );
-	ret |= clSetKernelArg( kernelOdd, 1, sizeof(cl_mem), (void *) &devCoord );
-	ret |= clSetKernelArg( kernelOdd, 2, sizeof(cl_mem), (void *) &devV );
-	ret |= clSetKernelArg( kernelOdd, 3, sizeof(cl_int), (void *) &(info->n) );
-	ret |= clSetKernelArg( kernelOdd, 4, sizeof(cl_float), (void *) &(info->eps) );
-	ret |= clSetKernelArg( kernelOdd, 5, sizeof(cl_float), (void *) &(info->kappa) );
-	ret |= clSetKernelArg( kernelOdd, 6, sizeof(cl_float), (void *) &(info->dt) );
+	cl_kernel krnl = clCreateKernel( program, "kernelVec", &ret );
+	ret = clSetKernelArg( krnl, 2, sizeof(cl_mem), (void *) &devV );
+	ret |= clSetKernelArg( krnl, 3, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( krnl, 4, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( krnl, 5, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( krnl, 6, sizeof(cl_float), (void *) &(info->dt) );
 
 	// šcepec: zagon
 	for( int i = 0; i < info->steps; i++ ) {
-		if( i % 2 == 0 )
-			ret = clEnqueueNDRangeKernel( command_queue, kernelEven, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
-		else
-			ret = clEnqueueNDRangeKernel( command_queue, kernelOdd, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
-	}
-	if( info->steps % 2 != 0 ) 
+		ret = clSetKernelArg( krnl, 0, sizeof(cl_mem), (void *) &devCoord );
+		ret |= clSetKernelArg( krnl, 1, sizeof(cl_mem), (void *) &devCoordNew );
+		ret = clEnqueueNDRangeKernel( command_queue, krnl, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
 		SWAP_MEM( devCoord, devCoordNew);
+	}
 
 	// Prenos rezultatov na gostitelja
 	ret = clEnqueueReadBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), Coord, 0, NULL, NULL );
@@ -402,8 +355,7 @@ void gpuVec( info_t *info ) {
 #pragma region Cleanup
 	ret = clFlush( command_queue );
 	ret = clFinish( command_queue );
-	ret = clReleaseKernel( kernelEven );
-	ret = clReleaseKernel( kernelOdd );
+	ret = clReleaseKernel( krnl );
 	ret = clReleaseProgram( program );
 	ret = clReleaseMemObject( devV );
 	ret = clReleaseMemObject( devCoord );
@@ -413,30 +365,21 @@ void gpuVec( info_t *info ) {
 
 	free( V );
 	free( Coord );
-	free( source_str );
 #pragma endregion
 }
 
 void gpuVecLocal( info_t *info ) {
 	cl_int	ret;
-	char *buf = nullptr;
 	clock_t clockStart, clockEnd;
 	printf( "\n\n== OpenCL (float4 local) ==\n" );
 
 #pragma region OpenCL Inicializacija
-	// Platforma
+	// Platforma in naprava
 	cl_platform_id platform_id = nullptr;
 	ret = clGetPlatformIDs( 1, &platform_id, NULL );
-	buf = GetPlatformName( &platform_id );
-	printf( "Platforma: %s\n", buf );
-	free( buf );
-
-	// Naprava 
 	cl_device_id device_id;
 	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
-	buf = GetDeviceName( &device_id );
-	printf( "Naprava: %s\n", buf );
-	free( buf );
+	PrintDeviceInfo( &platform_id, &device_id );
 
 	cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
 	cl_command_queue command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
@@ -447,7 +390,7 @@ void gpuVecLocal( info_t *info ) {
 	size_t local_item_size = info->local_item_size;
 	size_t num_groups = ((info->n - 1) / local_item_size + 1);
 	size_t global_item_size = num_groups*local_item_size;
-	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d)\n", local_item_size, num_groups, global_item_size, info->n );
+	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d, steps: %d)\n", local_item_size, num_groups, global_item_size, info->n, info->steps );
 #pragma endregion
 
 	// Host alokacija
@@ -461,17 +404,10 @@ void gpuVecLocal( info_t *info ) {
 	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(cl_float4), NULL, &ret );
 	cl_mem devV = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), V, &ret );
 
-#pragma region Prevajanje kernela
 	// Priprava programa
-	char *source_str = ReadKernelFromFile( "kernelVecLocal.cl", NULL );
-	cl_program program = clCreateProgramWithSource( context, 1, (const char **) &source_str, NULL, &ret );
-	ret = clBuildProgram( program, 1, &device_id, NULL, NULL, NULL );	// Prevajanje
-	if( ret != CL_SUCCESS ) {
-		PrintBuildLog( &program, &device_id );
-		exit( 1 );
-	}
-#pragma endregion
-
+	cl_program program;
+	BuildKernel( &program, &context, &device_id, "kernelVecLocal.cl" );
+	
 	// priprava šcepca 
 	cl_kernel krnl = clCreateKernel( program, "kernelVecLocal", &ret );
 	ret |= clSetKernelArg( krnl, 2, sizeof(cl_mem), (void *) &devV );
@@ -509,6 +445,5 @@ void gpuVecLocal( info_t *info ) {
 
 	free( V );
 	free( Coord );
-	free( source_str );
 #pragma endregion
 }

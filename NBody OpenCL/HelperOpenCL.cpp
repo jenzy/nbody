@@ -7,7 +7,7 @@
 #include <CL/cl.h>
 
 void clinfo( ) {
-	int i, j;
+	cl_uint i, j;
 	char* value;
 	size_t valueSize;
 	cl_uint platformCount;
@@ -123,4 +123,25 @@ void PrintBuildLog(cl_program *program, cl_device_id *device_id) {
 	clGetProgramBuildInfo( *program, *device_id, CL_PROGRAM_BUILD_LOG, build_log_len, log, NULL );
 	printf( "Build log: \n%s\n", log );
 	free( log );
+}
+
+void PrintDeviceInfo( cl_platform_id *platform_id, cl_device_id *device_id ) {
+	char *buf = GetDeviceName( device_id );
+	printf( "Naprava: %s ", buf );
+	free( buf );
+	buf = GetPlatformName( platform_id );
+	printf( "(%s)\n", buf );
+	free( buf );
+}
+
+void BuildKernel( cl_program *program, cl_context *context, cl_device_id *device, char *filename ) {
+	cl_int ret;
+	char *source_str = ReadKernelFromFile( filename, NULL );
+	*program = clCreateProgramWithSource( *context, 1, (const char **) &source_str, NULL, &ret );
+	ret = clBuildProgram( *program, 1, device, NULL, NULL, NULL );	// Prevajanje
+	if( ret != CL_SUCCESS ) {
+		PrintBuildLog( program, device );
+		exit( 1 );
+	}
+	free( source_str );
 }

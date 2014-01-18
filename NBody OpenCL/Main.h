@@ -44,5 +44,10 @@ char* ReadKernelFromFile( char *filename, int *outLen );
 char* GetPlatformName( cl_platform_id *platform_id );
 char* GetDeviceName( cl_device_id *device_id );
 void PrintBuildLog( cl_program *program, cl_device_id *device_id );
+void PrintDeviceInfo( cl_platform_id *platform_id, cl_device_id *device_id );
+void BuildKernel( cl_program *program, cl_context *context, cl_device_id *device, char *filename );
+
+// mpi.cpp
+void mpi( info_t *info );
 
 #endif

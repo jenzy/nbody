@@ -33,6 +33,9 @@
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mpi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">
@@ -49,6 +52,8 @@
     <None Include="kernelVec.cl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="kernelVecLocal.cl" />
+    <None Include="kernelVecLocal.cl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

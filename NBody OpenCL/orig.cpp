@@ -7,7 +7,7 @@
 
 
 #define M_PI 3.1415926
-#define SWAP(a,b) do {double *temp=a; a=b; b=temp;} while(0)
+#define SWAP_DOUBLE(a,b) do {double *temp=a; a=b; b=temp;} while(0)
 
 int cpuO( int argc, char *argv[] ) {
 
@@ -94,9 +94,9 @@ int cpuO( int argc, char *argv[] ) {
 			vy[i] += ay*dt;
 			vz[i] += az*dt;
 		}
-		SWAP( xnew, x );
-		SWAP( ynew, y );
-		SWAP( znew, z );
+		SWAP_DOUBLE( xnew, x );
+		SWAP_DOUBLE( ynew, y );
+		SWAP_DOUBLE( znew, z );
 		//checkResults( x, y, z, n );
 
 

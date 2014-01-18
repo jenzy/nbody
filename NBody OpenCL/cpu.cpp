@@ -5,6 +5,7 @@
 
 #include "Main.h"
 void cpu( info_t *info ) {
+	printf( "\n\n== CPU ==\n" );
 	int i, j, s;
 	clock_t clockStart, clockEnd;
 
