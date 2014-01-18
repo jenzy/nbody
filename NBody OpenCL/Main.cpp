@@ -25,13 +25,13 @@ int main( int argc, char **argv ) {
 	MPI_Init( &argc, &argv );
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
-	mpi( &info );
 
+	/*mpi( &info );
 	MPI_Barrier( MPI_COMM_WORLD );
-	fflush( stdout );
+	fflush( stdout );*/
 
 	if( rank == 0 ) {
-		cpu( &info );
+		//cpu( &info );
 		//gpu( &info );
 		//gpuVec( &info );
 		gpuVecLocal( &info );
