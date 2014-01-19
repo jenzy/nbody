@@ -6,6 +6,7 @@
 #define M_PI 3.1415926
 //#define SWAP(a,b) do {double *temp=a; a=b; b=temp;} while(0)
 #define SWAP(a,b) do {float *temp=a; a=b; b=temp;} while(0)
+#define SWAP_MEM(a,b) do {cl_mem temp=a; a=b; b=temp;} while(0)
 
 typedef struct _info {
 	int n; 			        /* stevilo teles */
@@ -48,5 +49,6 @@ void BuildKernel( cl_program *program, cl_context *context, cl_device_id *device
 
 // mpi.cpp
 void mpi( info_t *info );
+void mpiOpenCL( info_t *info );
 
 #endif

@@ -52,5 +52,8 @@
     <None Include="kernelVecLocal.cl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="kernelCombo.cl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

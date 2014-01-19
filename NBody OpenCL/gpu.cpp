@@ -6,8 +6,6 @@
 
 #include "Main.h"
 
-#define SWAP_MEM(a,b) do {cl_mem temp=a; a=b; b=temp;} while(0)
-
 void gpu( info_t *info ) {
 	cl_int	ret;
 	clock_t clockStart, clockEnd;

@@ -108,6 +108,12 @@
       <AdditionalLibraryDirectories>C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;C:\Program Files\Microsoft HPC Pack 2012\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)\kernelCombo.cl" "$(TargetDir)"
+copy "$(ProjectDir)\kernelFloat1.cl" "$(TargetDir)"
+copy "$(ProjectDir)\kernelVec.cl" "$(TargetDir)"
+copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -147,6 +153,12 @@
       <AdditionalLibraryDirectories>C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;C:\Program Files\Microsoft HPC Pack 2012\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)\kernelCombo.cl" "$(TargetDir)"
+copy "$(ProjectDir)\kernelFloat1.cl" "$(TargetDir)"
+copy "$(ProjectDir)\kernelVec.cl" "$(TargetDir)"
+copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cpu.cpp" />
@@ -161,6 +173,9 @@
     <ClInclude Include="Main.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="kernelCombo.cl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="kernelFloat1.cl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
