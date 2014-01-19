@@ -15,13 +15,13 @@ int main( int argc, char **argv ) {
 	info.sphereRadius = 10; 
 	info.kappa = 1; 			
 	info.mass = 1; 			
-	info.eps = 0.0001; 		
-	info.dt = 0.01; 	//0.001		
+	info.eps = 0.0001f; 		
+	info.dt = 0.01f; 	//0.001		
 	info.seed = 42;
 	info.deviceType = CL_DEVICE_TYPE_GPU;
 	info.local_item_size = 64;
 
-	bool doMPI = false;
+	bool doMPI = true;
 	bool doCPU = true;
 	bool doGPU = false;
 

@@ -10,10 +10,10 @@
 void mpi( info_t *info ) {
 	int rank, numOfProcesses;
 	clock_t clockStart, clockEnd;
-
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	MPI_Comm_size( MPI_COMM_WORLD, &numOfProcesses );
 
+	// counts in disps za Allgatherv, uposteva da eno telo = float4
 	int* counts = (int*) malloc( numOfProcesses * sizeof(int) );
 	int* disps = (int*) malloc( numOfProcesses * sizeof(int) );
 	for( int i = 0; i<numOfProcesses; i++ ) {
@@ -29,10 +29,11 @@ void mpi( info_t *info ) {
 	float *V = (float *) calloc( sizeof(float), 3 * counts[rank] );
 	float ax, ay, az, dx, dy, dz, myX, myY, myZ, invr, force;
 
-	
 	if( rank == 0 ) {
-		printf( "\n\n== MPI ==\n" ); fflush( stdout );
+		printf( "\n\n== MPI ==\n" ); 
+		printf( "Processes: %d (N: %d, steps: %d)\n",numOfProcesses, info->n, info->steps ); fflush( stdout );
 
+		// Generate coordinates and masses
 		generateCoordinatesFloat4( Coord, info );
 
 		clockStart = clock( );
@@ -41,14 +42,15 @@ void mpi( info_t *info ) {
 	// Send starting data
 	MPI_Bcast( Coord, 4 * info->n, MPI_FLOAT, 0, MPI_COMM_WORLD );
 
-	//Racunanje
-	int M = disps[rank] + counts[rank];
+	// Racunanje
+	int m = disps[rank];
+	int M = m + counts[rank];
 	int n4 = 4 * info->n;
 	float dt2 = 0.5f * info->dt*info->dt;
 	for( int step = 0; step < info->steps; step++ ) {
 		int vIndex = 0;
-		for( int i = disps[rank]; i < M; i += 4, vIndex += 3 ) { // za vsako telo
-			ax = ay = az = 0.0;
+		for( int i = m; i < M; i += 4, vIndex += 3 ) { // za vsako telo
+			ax = ay = az = 0.f;
 			myX = Coord[i]; myY = Coord[i + 1]; myZ = Coord[i + 2];
 			for( int j = 0; j < n4; j += 4 ) { // pregledamo vse ostale delce
 				dx = Coord[j]     - myX;
@@ -62,20 +64,19 @@ void mpi( info_t *info ) {
 				ay += force*dy;
 				az += force*dz;
 			}
-			newCoord[i] = myX + V[vIndex] * info->dt + ax*dt2; // nov polozaj za telo
+			newCoord[i]		= myX + V[vIndex]     * info->dt + ax*dt2; // nov polozaj za telo
 			newCoord[i + 1] = myY + V[vIndex + 1] * info->dt + ay*dt2;
 			newCoord[i + 2] = myZ + V[vIndex + 2] * info->dt + az*dt2;
 			newCoord[i + 3] = Coord[i + 3];
 
-			V[vIndex] += ax * info->dt; // nova hitrost za telo
+			V[vIndex]     += ax * info->dt; // nova hitrost za telo
 			V[vIndex + 1] += ay * info->dt;
 			V[vIndex + 2] += az * info->dt;
 		}
 
 		// Exchange data
-		MPI_Allgatherv( &newCoord[disps[rank]], counts[rank], MPI_FLOAT, Coord, counts, disps, MPI_FLOAT, MPI_COMM_WORLD );
+		MPI_Allgatherv( &newCoord[m], counts[rank], MPI_FLOAT, Coord, counts, disps, MPI_FLOAT, MPI_COMM_WORLD );
 	}
-	
 	
 	if( rank == 0 ) {
 		clockEnd = clock( );
@@ -87,4 +88,6 @@ void mpi( info_t *info ) {
 	free( Coord );
 	free( newCoord );
 	free( V );
+	free( counts );
+	free( disps );
 }
