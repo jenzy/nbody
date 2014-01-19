@@ -46,9 +46,6 @@
     <None Include="kernelFloat1.cl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="kernelSyncTest.cl">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="kernelVec.cl">
       <Filter>Resource Files</Filter>
     </None>
