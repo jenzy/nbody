@@ -8,10 +8,11 @@
 #include <CL/cl_platform.h>
 
 #include "Main.h"
+#include "Timer.h"
 
 void mpi( info_t *info ) {
 	int rank, numOfProcesses;
-	clock_t clockStart, clockEnd;
+	Timer time;
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	MPI_Comm_size( MPI_COMM_WORLD, &numOfProcesses );
 
@@ -38,7 +39,7 @@ void mpi( info_t *info ) {
 		// Generate coordinates and masses
 		generateCoordinatesFloat4( Coord, info );
 
-		clockStart = clock( );
+		time.Tic();
 	}
 
 	// Send starting data
@@ -81,8 +82,7 @@ void mpi( info_t *info ) {
 	}
 	
 	if( rank == 0 ) {
-		clockEnd = clock( );
-		printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );
+		printf( "Cas izvajanja %lf\n", time.Toc() );
 		checkResultsFloat4( Coord, info->n );
 	}
 	
@@ -98,7 +98,8 @@ void mpiOpenCL( info_t *info ) {
 
 #pragma region MPI Init
 	int rank, numOfProcesses;
-	clock_t clockStart, clockEnd;
+	Timer time;
+	cl_event event;
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	MPI_Comm_size( MPI_COMM_WORLD, &numOfProcesses );
 
@@ -150,12 +151,12 @@ void mpiOpenCL( info_t *info ) {
 		generateCoordinatesFloat4( Coord, info );
 	MPI_Bcast( Coord, 4 * info->n, MPI_FLOAT, 0, MPI_COMM_WORLD );
 
-	if(rank==0) 
-		clockStart = clock();
+	if( rank == 0 )
+		time.Tic();
 	// Device alokacija
-	cl_mem devCoord = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(cl_float4), NULL, &ret );
-	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(cl_float4), NULL, &ret );
-	cl_mem devV = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, myN*sizeof(cl_float4), V, &ret );
+	cl_mem devCoord    = clCreateBuffer( context, CL_MEM_READ_WRITE,                        info->n*sizeof(cl_float4), NULL, &ret );
+	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE,                        info->n*sizeof(cl_float4), NULL, &ret );
+	cl_mem devV        = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, myN*sizeof(cl_float4),     V,    &ret );
 	
 	// Priprava programa
 	cl_program program;
@@ -169,7 +170,6 @@ void mpiOpenCL( info_t *info ) {
 	ret |= clSetKernelArg( krnl, 5, sizeof(cl_float), (void *) &(info->eps) );
 	ret |= clSetKernelArg( krnl, 6, sizeof(cl_float), (void *) &(info->kappa) );
 	ret |= clSetKernelArg( krnl, 7, sizeof(cl_float), (void *) &(info->dt) );
-	ret |= clSetKernelArg( krnl, 8, info->local_item_size * sizeof(cl_float4), NULL );
 
 
 	// zagon šèepca
@@ -182,13 +182,13 @@ void mpiOpenCL( info_t *info ) {
 		SWAP_MEM( devCoord, devCoordNew );
 
 		// Prenos rezultatov na gostitelja in posiljanje ostalim
-		ret = clEnqueueReadBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), Coord, 0, NULL, NULL );
+		ret = clEnqueueReadBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), Coord, 0, NULL, &event );
+		clWaitForEvents( 1, &event );
 		MPI_Allgatherv( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, Coord, counts, disps, MPI_FLOAT, MPI_COMM_WORLD );
 	}
 
 	if( rank == 0 ) {
-		clockEnd = clock();
-		printf( "Cas izvajanja %lf\n", (double) (clockEnd - clockStart) / CLOCKS_PER_SEC );
+		printf( "Cas izvajanja %lf\n", time.Toc() );
 		checkResultsFloat4( Coord, info->n );
 	}
 

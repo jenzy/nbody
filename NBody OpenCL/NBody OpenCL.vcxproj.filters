@@ -46,17 +46,17 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="kernelCombo.cl">
+      <Filter>Source Files</Filter>
+    </None>
     <None Include="kernelFloat1.cl">
-      <Filter>Resource Files</Filter>
+      <Filter>Source Files</Filter>
     </None>
     <None Include="kernelVec.cl">
-      <Filter>Resource Files</Filter>
+      <Filter>Source Files</Filter>
     </None>
     <None Include="kernelVecLocal.cl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="kernelCombo.cl">
-      <Filter>Resource Files</Filter>
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
 </Project>

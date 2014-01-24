@@ -10,8 +10,8 @@
 
 int main( int argc, char **argv ) {
 	info_t info;
-	info.n = 10240; 				
-	info.steps = 1;	
+	info.n = 1000; 				
+	info.steps = 100;	
 	info.sphereRadius = 10; 
 	info.kappa = 1; 			
 	info.mass = 1; 			
@@ -21,13 +21,13 @@ int main( int argc, char **argv ) {
 	info.deviceType = CL_DEVICE_TYPE_GPU;
 	info.local_item_size = 64;
 
-	bool doMPI = false;
+	bool doMPI = true;
 	bool doCPU = false;
 	bool doCPUOpt = false;
-	bool doGPU1 = true;
+	bool doGPU1 = false;
 	bool doGPU2 = true;
-	bool doGPU3 = true;
-	bool doCombo = false;
+	bool doGPU3 = false;
+	bool doCombo = true;
 
 	for( int i = 1; i < argc; i++ ) {
 		if( argv[i][0] == '-' ) {
