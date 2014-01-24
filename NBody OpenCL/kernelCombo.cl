@@ -23,7 +23,7 @@ kernel void kernelCombo( global float4 *Coord,
 			a += force * dr;
 		}
 		a.w = 0.f;
-		newCoord[idGlobal] = myBody + V[id] * dt + a*(dt*dt*0.5f);
+		newCoord[id] = myBody + V[id] * dt + a*(dt*dt*0.5f);
 		V[id] += a * dt;
 	}
 }

@@ -146,6 +146,7 @@ void mpiOpenCL( info_t *info ) {
 
 	// HOST alokacija ("float4", .w bo masa)
 	float *Coord = (float *) malloc( 4 * sizeof(float) * info->n );
+	float *newCoord = (float *) malloc( 4 * sizeof(float) * myN );
 	float *V = (float *) calloc( sizeof(float), 4 * myN );
 	if( rank == 0 )
 		generateCoordinatesFloat4( Coord, info );
@@ -155,7 +156,7 @@ void mpiOpenCL( info_t *info ) {
 		time.Tic();
 	// Device alokacija
 	cl_mem devCoord    = clCreateBuffer( context, CL_MEM_READ_WRITE,                        info->n*sizeof(cl_float4), NULL, &ret );
-	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE,                        info->n*sizeof(cl_float4), NULL, &ret );
+	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE,                        myN*sizeof(cl_float4),     NULL, &ret );
 	cl_mem devV        = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, myN*sizeof(cl_float4),     V,    &ret );
 	
 	// Priprava programa
@@ -164,6 +165,8 @@ void mpiOpenCL( info_t *info ) {
 
 	// priprava šcepca 
 	cl_kernel krnl = clCreateKernel( program, "kernelCombo", &ret );
+	ret = clSetKernelArg( krnl, 0, sizeof(cl_mem), (void *) &devCoord );
+	ret |= clSetKernelArg( krnl, 1, sizeof(cl_mem), (void *) &devCoordNew );
 	ret |= clSetKernelArg( krnl, 2, sizeof(cl_mem), (void *) &devV );
 	ret |= clSetKernelArg( krnl, 3, sizeof(cl_int), (void *) &myStart );
 	ret |= clSetKernelArg( krnl, 4, sizeof(cl_int), (void *) &(info->n) );
@@ -176,15 +179,12 @@ void mpiOpenCL( info_t *info ) {
 	for( int step = 0; step < info->steps; step++ ) {
 		ret = clEnqueueWriteBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), Coord, 0, NULL, NULL );
 
-		ret = clSetKernelArg( krnl, 0, sizeof(cl_mem), (void *) &devCoord );
-		ret |= clSetKernelArg( krnl, 1, sizeof(cl_mem), (void *) &devCoordNew );
 		ret |= clEnqueueNDRangeKernel( command_queue, krnl, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
-		SWAP_MEM( devCoord, devCoordNew );
 
 		// Prenos rezultatov na gostitelja in posiljanje ostalim
-		ret = clEnqueueReadBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), Coord, 0, NULL, &event );
+		ret = clEnqueueReadBuffer( command_queue, devCoordNew, CL_TRUE, 0, myN * sizeof(cl_float4), newCoord, 0, NULL, &event );
 		clWaitForEvents( 1, &event );
-		MPI_Allgatherv( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, Coord, counts, disps, MPI_FLOAT, MPI_COMM_WORLD );
+		MPI_Allgatherv( newCoord, counts[rank], MPI_FLOAT, Coord, counts, disps, MPI_FLOAT, MPI_COMM_WORLD );
 	}
 
 	if( rank == 0 ) {
