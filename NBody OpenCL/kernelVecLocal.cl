@@ -5,7 +5,7 @@ kernel void kernelVecLocal( global float4 *Coord,
 							float eps,
 							float kappa,
 							float dt,
-							local float4* locCoord
+							local float4 *locCoord
 						) 
 {
 	int id = get_global_id( 0 );
@@ -15,7 +15,7 @@ kernel void kernelVecLocal( global float4 *Coord,
 	float4 myBody = Coord[id];
 	float4 a = (float4)(0, 0, 0, 0);
 	
-	for( int j = 0; j < n;/* j+=blockSize*/) {
+	for( int j = 0; j < n; /*j+=blockSize*/) {
 		locCoord[idLocal] = Coord[j + idLocal];
 		barrier( CLK_LOCAL_MEM_FENCE );
 
@@ -23,7 +23,6 @@ kernel void kernelVecLocal( global float4 *Coord,
 			float4 dr = locCoord[k] - myBody;
 			float4 dr2 = dr*dr;
 			float invr = 1.f / sqrt( dr2.x + dr2.y + dr2.z + eps );
-			//float invr = rsqrt( dr2.x + dr2.y + dr2.z + eps );
 
 			float force = kappa * myBody.w * invr*invr*invr; // F = G * M / r^3
 			a += force * dr;

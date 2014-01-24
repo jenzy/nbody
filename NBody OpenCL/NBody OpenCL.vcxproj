@@ -101,6 +101,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Program Files (x86)\AMD APP SDK\2.9\include;C:\Program Files\Microsoft HPC Pack 2012\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +145,7 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Program Files (x86)\AMD APP SDK\2.9\include;C:\Program Files\Microsoft HPC Pack 2012\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -167,10 +169,11 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
     <ClCompile Include="HelperOpenCL.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="mpi.cpp" />
-    <ClCompile Include="orig.cpp" />
+    <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h" />
+    <ClInclude Include="Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="kernelCombo.cl">

@@ -10,8 +10,8 @@
 
 int main( int argc, char **argv ) {
 	info_t info;
-	info.n = 100; 				
-	info.steps = 100;	
+	info.n = 10240; 				
+	info.steps = 1;	
 	info.sphereRadius = 10; 
 	info.kappa = 1; 			
 	info.mass = 1; 			
@@ -23,6 +23,7 @@ int main( int argc, char **argv ) {
 
 	bool doMPI = false;
 	bool doCPU = false;
+	bool doCPUOpt = false;
 	bool doGPU1 = true;
 	bool doGPU2 = true;
 	bool doGPU3 = true;
@@ -40,6 +41,10 @@ int main( int argc, char **argv ) {
 				doCPU = true;
 			else if( strcmp( argv[i], "-nocpu" ) == 0 )
 				doCPU = false;
+			else if( strcmp( argv[i], "-cpuopt" ) == 0 )
+				doCPUOpt = true;
+			else if( strcmp( argv[i], "-nocpuopt" ) == 0 )
+				doCPUOpt = false;
 			else if( strcmp( argv[i], "-gpu1" ) == 0 )
 				doGPU1 = true;
 			else if( strcmp( argv[i], "-nogpu1" ) == 0 )
@@ -81,13 +86,13 @@ int main( int argc, char **argv ) {
 
 	if( rank == 0 ) {
 		if( doCPU )  cpu( &info );
+		if( doCPUOpt) cpuOpt( &info );
 		if( doGPU1 ) gpu( &info );
 		if( doGPU2 ) gpuVec( &info );
 		if( doGPU3 ) gpuVecLocal( &info );
 
 		printf( "\n===========================================================================\n" );
 	}
-
 
 	MPI_Finalize();
 }
