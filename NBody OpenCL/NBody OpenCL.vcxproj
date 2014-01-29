@@ -100,14 +100,14 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\AMD APP SDK\2.9\include;C:\Program Files\Microsoft HPC Pack 2012\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\++\Libs\glew-1.10.0\include;C:\Program Files (x86)\AMD APP SDK\2.9\include;C:\Program Files\Microsoft HPC Pack 2012\Inc;D:\++\Libs\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;C:\Program Files\Microsoft HPC Pack 2012\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\++\Libs\glew-1.10.0\lib\Release\x64;C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;C:\Program Files\Microsoft HPC Pack 2012\Lib;D:\++\Libs\freeglut\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)\kernelCombo.cl" "$(TargetDir)"
@@ -144,7 +144,7 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\AMD APP SDK\2.9\include;C:\Program Files\Microsoft HPC Pack 2012\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\++\Libs\glew-1.10.0\include;C:\Program Files (x86)\AMD APP SDK\2.9\include;C:\Program Files\Microsoft HPC Pack 2012\Inc;D:\++\Libs\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -152,8 +152,8 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;C:\Program Files\Microsoft HPC Pack 2012\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\++\Libs\glew-1.10.0\lib\Release\x64;C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;C:\Program Files\Microsoft HPC Pack 2012\Lib;D:\++\Libs\freeglut\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)\kernelCombo.cl" "$(TargetDir)"

@@ -1,6 +1,4 @@
-#ifndef _CPU_H
-#define _CPU_H
-
+#pragma once
 #include <CL\cl.h>
 
 #define M_PI 3.1415926
@@ -30,6 +28,7 @@ void cpuOpt( info_t *info );
 void gpu( info_t *info );
 void gpuVec( info_t *info );
 void gpuVecLocal( info_t *info );
+void gpuOpenGL( info_t *info );
 
 // Helper.cpp
 float checkResults( float *X, float *Y, float *Z, int len );
@@ -49,5 +48,3 @@ void BuildKernel( cl_program *program, cl_context *context, cl_device_id *device
 // mpi.cpp
 void mpi( info_t *info );
 void mpiOpenCL( info_t *info );
-
-#endif

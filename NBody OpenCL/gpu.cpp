@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <CL/cl.h>
 #include <CL/cl_platform.h>
+#include <CL/cl_gl.h>
 #include <time.h>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 
 #include "Main.h"
 #include "Timer.h"
@@ -271,4 +274,169 @@ void gpuVecLocal( info_t *info ) {
 	free( V );
 	free( Coord );
 #pragma endregion
+}
+
+void timerCB( int ms ) {
+	//this makes sure the appRender function is called every ms miliseconds
+	glutTimerFunc( ms, timerCB, ms );
+	glutPostRedisplay( );
+}
+
+GLuint vboCoord = 0;
+int n = 0;
+cl_mem devCoordNew;
+cl_mem devCoord;
+cl_kernel krnl;
+cl_command_queue command_queue;
+cl_int ret;
+size_t global_item_size;
+size_t local_item_size;
+
+void render( void ) {
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+	glFinish( );
+	ret = clEnqueueAcquireGLObjects( command_queue, 1, &devCoord, 0, NULL, NULL );
+	ret = clFinish( command_queue );
+
+	//execute the kernel
+	ret = clSetKernelArg( krnl, 0, sizeof(cl_mem), (void *) &devCoord );
+	ret |= clSetKernelArg( krnl, 1, sizeof(cl_mem), (void *) &devCoordNew );
+	ret |= clEnqueueNDRangeKernel( command_queue, krnl, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
+	//printf( "hi\n" );
+	clFinish( command_queue );
+
+	//Release the VBOs so OpenGL can play with them
+	clEnqueueReleaseGLObjects( command_queue, 1, &devCoord, 0, NULL, NULL );
+	clFinish( command_queue );
+
+	SWAP_MEM( devCoord, devCoordNew );
+
+	//render the particles from VBOs
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	glEnable( GL_POINT_SMOOTH );
+	glPointSize( 2. );
+	glColor3f( 1.0f, 1.0f, 1.0f );
+
+	//printf("color buffer\n");
+	//glBindBuffer( GL_ARRAY_BUFFER, example->c_vbo );
+	//glColorPointer( 4, GL_FLOAT, 0, 0 );
+
+	//printf("vertex buffer\n");
+	glBindBuffer( GL_ARRAY_BUFFER, vboCoord );
+	glVertexPointer( 3, GL_FLOAT, sizeof(float), 0 );
+
+	//printf("enable client state\n");
+	glEnableClientState( GL_VERTEX_ARRAY );
+	//glEnableClientState( GL_COLOR_ARRAY );
+
+	//Need to disable these for blender
+	glDisableClientState( GL_NORMAL_ARRAY );
+
+	//printf("draw arrays\n");
+	glDrawArrays( GL_POINTS, 0, n );
+
+	//printf("disable stuff\n");
+	//glDisableClientState( GL_COLOR_ARRAY );
+	glDisableClientState( GL_VERTEX_ARRAY );
+
+	glutSwapBuffers( );
+}
+
+
+void gpuOpenGL( info_t *info ) {
+
+#pragma region Delitev dela
+	// Delitev dela
+	local_item_size = info->local_item_size;
+	size_t num_groups = ((info->n - 1) / local_item_size + 1);
+	global_item_size = num_groups*local_item_size;
+	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d, steps: %d)\n", local_item_size, num_groups, global_item_size, info->n, info->steps );
+#pragma endregion
+
+#pragma region GL Init
+	int window_width = 800, window_height = 800;
+	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
+	glutInitWindowSize( window_width, window_height );
+	glutInitWindowPosition( glutGet( GLUT_SCREEN_WIDTH ) / 2 - window_width / 2, glutGet( GLUT_SCREEN_HEIGHT ) / 2 - window_height / 2 );
+	glutCreateWindow( "N-Body" );
+
+	glutDisplayFunc( render ); //main rendering function
+	glutTimerFunc( 30, timerCB, 30 ); //determin a minimum time between frames
+	//glutKeyboardFunc( appKeyboard );
+	//glutMouseFunc( appMouse );
+	//glutMotionFunc( appMotion );
+
+	glewInit( );
+
+	glClearColor( 0.0, 0.0, 0.0, 1.0 );
+	glDisable( GL_DEPTH_TEST );
+
+	// projection
+	glViewport( 0, 0, window_width, window_height );
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity( );
+	gluPerspective( 90.0, (GLfloat) window_width / (GLfloat) window_height, 0.1, 1000.0 );
+
+	// view matrix
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity( );
+	glTranslatef( 0.0, 0.0, -25.0f );
+#pragma endregion
+
+#pragma region OpenCL Inicializacija
+	cl_platform_id platform_id;
+	cl_device_id device_id;
+	ret = clGetPlatformIDs( 1, &platform_id, NULL );
+	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
+	PrintDeviceInfo( &platform_id, &device_id );
+
+	//cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
+	cl_context_properties props[] =
+	{
+		CL_GL_CONTEXT_KHR, (cl_context_properties) wglGetCurrentContext( ),
+		CL_WGL_HDC_KHR, (cl_context_properties) wglGetCurrentDC( ),
+		CL_CONTEXT_PLATFORM, (cl_context_properties) (platform_id),
+		0
+	};
+	cl_context context = clCreateContext(props, 1, &device_id, NULL, NULL, &ret);
+	command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
+#pragma endregion
+
+	// Host alokacija
+	float *Coord = (float*) malloc( sizeof(cl_float4) * info->n );
+	generateCoordinatesFloat4( Coord, info );
+	float *V = (float *) calloc( info->n, 4 * sizeof(float) );
+	n = info->n;
+
+	glGenBuffers( 1, &vboCoord );
+	glBindBuffer( GL_ARRAY_BUFFER, vboCoord );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(cl_float4) * info->n, Coord, GL_DYNAMIC_DRAW ); // upload data to video card
+
+	// Device alokacija in kopiranje podatkov
+	devCoord = clCreateFromGLBuffer( context, CL_MEM_READ_WRITE, vboCoord, &ret );
+	printf( "%d\n", ret );
+	devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE, info->n*sizeof(cl_float4), NULL, &ret );
+	cl_mem devV = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), V, &ret );
+
+#pragma region CL Program
+	// Priprava programa
+	cl_program program;
+	BuildKernel( &program, &context, &device_id, "kernelVecLocal.cl" );
+
+	// priprava šcepca 
+	krnl = clCreateKernel( program, "kernelVecLocal", &ret );
+	ret |= clSetKernelArg( krnl, 2, sizeof(cl_mem), (void *) &devV );
+	ret |= clSetKernelArg( krnl, 3, sizeof(cl_int), (void *) &(info->n) );
+	ret |= clSetKernelArg( krnl, 4, sizeof(cl_float), (void *) &(info->eps) );
+	ret |= clSetKernelArg( krnl, 5, sizeof(cl_float), (void *) &(info->kappa) );
+	ret |= clSetKernelArg( krnl, 6, sizeof(cl_float), (void *) &(info->dt) );
+	ret |= clSetKernelArg( krnl, 7, info->local_item_size * sizeof(cl_float4), NULL );
+
+#pragma endregion
+
+
+	glutMainLoop( );
 }

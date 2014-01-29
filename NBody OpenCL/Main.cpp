@@ -5,33 +5,35 @@
 #include <cmath>
 #include <CL/cl.h>
 #include <mpi.h>
+#include <GL/freeglut.h>
 
 #include "Main.h"
 
 int main( int argc, char **argv ) {
 	info_t info;
-	info.n = 1000; 				
-	info.steps = 100;	
-	info.sphereRadius = 10; 
+	info.n = 5000; 				
+	info.steps = 1;	
+	info.sphereRadius = 10; //10
 	info.kappa = 1; 			
 	info.mass = 1; 			
 	info.eps = 0.0001f; 		
 	info.dt = 0.01f; 	//0.001		
 	info.seed = 42;
 	info.deviceType = CL_DEVICE_TYPE_GPU;
-	info.local_item_size = 64;
+	info.local_item_size = 256;
 
-	bool doMPI = true;
+	bool doMPI = false;
 	bool doCPU = false;
 	bool doCPUOpt = false;
 	bool doGPU1 = false;
-	bool doGPU2 = true;
+	bool doGPU2 = false;
 	bool doGPU3 = false;
-	bool doCombo = true;
+	bool doCombo = false;
+	bool doGL = true;
 
 	for( int i = 1; i < argc; i++ ) {
 		if( argv[i][0] == '-' ) {
-			if( strcmp(argv[i], "-n") == 0 )
+			if( strcmp( argv[i], "-n" ) == 0 )
 				info.n = atoi( argv[++i] );
 			if( strcmp( argv[i], "-l" ) == 0 )
 				info.local_item_size = atoi( argv[++i] );
@@ -65,6 +67,10 @@ int main( int argc, char **argv ) {
 				doCombo = true;
 			else if( strcmp( argv[i], "-nocombo" ) == 0 )
 				doCombo = false;
+			else if( strcmp( argv[i], "-GL" ) == 0 )
+				doGL = true;
+			else if( strcmp( argv[i], "-noGL" ) == 0 )
+				doGL = false;
 		}
 	}
 
@@ -89,7 +95,11 @@ int main( int argc, char **argv ) {
 		if( doCPUOpt) cpuOpt( &info );
 		if( doGPU1 ) gpu( &info );
 		if( doGPU2 ) gpuVec( &info );
-		if( doGPU3 ) gpuVecLocal( &info );
+		if( doGPU3 ) gpuVecLocal( &info ); 
+		if( doGL ) {
+			glutInit( &argc, argv );
+			gpuOpenGL( &info );
+		}
 
 		printf( "\n===========================================================================\n" );
 	}
