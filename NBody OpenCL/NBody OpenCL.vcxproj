@@ -170,10 +170,12 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="mpi.cpp" />
     <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="WOCL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="WOCL.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="kernelCombo.cl">
