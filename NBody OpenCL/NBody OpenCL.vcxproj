@@ -164,6 +164,7 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cpu.cpp" />
+    <ClCompile Include="GL.cpp" />
     <ClCompile Include="gpu.cpp" />
     <ClCompile Include="Helper.cpp" />
     <ClCompile Include="HelperOpenCL.cpp" />
@@ -173,6 +174,7 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
     <ClCompile Include="WOCL.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GL.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="WOCL.h" />
