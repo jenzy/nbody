@@ -9,8 +9,11 @@
 
 #include "Main.h"
 #include "Timer.h"
+#include "WOCL.h"
 
 void gpu( info_t *info ) {
+	WOCL gpu = WOCL( CL_DEVICE_TYPE_GPU );
+
 	cl_int	ret;
 	Timer time;
 	printf( "\n\n== OpenCL ==\n" );

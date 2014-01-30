@@ -25,11 +25,11 @@ int main( int argc, char **argv ) {
 	bool doMPI = false;
 	bool doCPU = false;
 	bool doCPUOpt = false;
-	bool doGPU1 = false;
+	bool doGPU1 = true;
 	bool doGPU2 = false;
 	bool doGPU3 = false;
 	bool doCombo = false;
-	bool doGL = true;
+	bool doGL = false;
 
 	for( int i = 1; i < argc; i++ ) {
 		if( argv[i][0] == '-' ) {
