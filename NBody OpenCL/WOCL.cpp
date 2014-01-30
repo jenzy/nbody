@@ -25,18 +25,8 @@ WOCL::~WOCL() {
 		ret |= clReleaseMemObject( m_devBuffers[i].first );
 	}
 
-	/*ret |= clReleaseKernel( krnl );
-	ret |= clReleaseProgram( program );
-	ret |= clReleaseMemObject( devX );
-	ret |= clReleaseMemObject( devY );
-	ret |= clReleaseMemObject( devZ );
-	ret |= clReleaseMemObject( devM );
-	ret |= clReleaseMemObject( devNewX );
-	ret |= clReleaseMemObject( devNewY );
-	ret |= clReleaseMemObject( devNewZ );
-	ret |= clReleaseMemObject( devVX );
-	ret |= clReleaseMemObject( devVY );
-	ret |= clReleaseMemObject( devVZ );*/
+	ret |= clReleaseKernel( m_kernel );
+	ret |= clReleaseProgram( m_program );
 	ret |= clReleaseCommandQueue( m_queue );
 	ret |= clReleaseContext( m_context );
 	CheckForError( ret, "Cleanup" );
