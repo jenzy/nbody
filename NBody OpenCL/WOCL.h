@@ -100,6 +100,7 @@ public:
 	void CopyDeviceToHost( cl_mem *device, void *host, size_t size );
 	void ExecuteKernel();
 
+	void SetAndAllocKernelArgument( int idx, size_t size );
 	template<typename T> void SetKernelArgument( int idx, T *parameter ) {
 		ret = clSetKernelArg( m_kernel, idx, sizeof(T), (void *) parameter );
 		CheckForError( ret, "clSetKernelArg" );

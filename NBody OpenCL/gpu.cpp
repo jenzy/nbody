@@ -15,7 +15,7 @@ void gpu( info_t *info ) {
 	printf( "\n\n== OpenCL ==                   N: %d, Steps: %d\n", info->n, info->steps );
 
 	Timer t;
-	WOCL gpu = WOCL( CL_DEVICE_TYPE_GPU );
+	WOCL gpu = WOCL( info->deviceType );
 	gpu.SetWorkSize( info->local_item_size, WOCL::CalculateNumOfGroups( info->local_item_size, info->n ), 0 );
 
 	// Host alokacija
@@ -86,7 +86,7 @@ void gpuVec( info_t *info ) {
 	printf( "\n\n== OpenCL (float4) ==          N: %d, Steps: %d\n", info->n, info->steps );
 
 	Timer t;
-	WOCL gpu = WOCL( CL_DEVICE_TYPE_GPU );
+	WOCL gpu = WOCL( info->deviceType );
 	gpu.SetWorkSize( info->local_item_size, WOCL::CalculateNumOfGroups( info->local_item_size, info->n ), 0 );
 
 	// Host alokacija
@@ -112,9 +112,7 @@ void gpuVec( info_t *info ) {
 	for( int i = 0; i < info->steps; i++ ) {
 		gpu.SetKernelArgument<cl_mem>( 0, &devCoord );
 		gpu.SetKernelArgument<cl_mem>( 1, &devCoordNew );
-
 		gpu.ExecuteKernel( );
-
 		SWAP_MEM( devCoord, devCoordNew);
 	}
 
@@ -129,82 +127,48 @@ void gpuVec( info_t *info ) {
 }
 
 void gpuVecLocal( info_t *info ) {
-	cl_int	ret;
-	Timer time;
-	printf( "\n\n== OpenCL (float4 local) ==\n" );
+	printf( "\n\n== OpenCL (float4 local) ==    N: %d, Steps: %d\n", info->n, info->steps );
 
-#pragma region OpenCL Inicializacija
-	// Platforma in naprava
-	cl_platform_id platform_id;
-	cl_device_id device_id;
-	ret = clGetPlatformIDs( 1, &platform_id, NULL );
-	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
-	PrintDeviceInfo( &platform_id, &device_id );
-
-	cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
-	cl_command_queue command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
-#pragma endregion
-
-#pragma region Delitev dela
-	// Delitev dela
-	size_t local_item_size = info->local_item_size;
-	size_t num_groups = ((info->n - 1) / local_item_size + 1);
-	size_t global_item_size = num_groups*local_item_size;
-	printf( "Delitev dela: local: %d | num_groups: %d | global: %d  (N: %d, steps: %d)\n", local_item_size, num_groups, global_item_size, info->n, info->steps );
-#pragma endregion
+	Timer t;
+	WOCL gpu = WOCL( info->deviceType );
+	gpu.SetWorkSize( info->local_item_size, WOCL::CalculateNumOfGroups( info->local_item_size, info->n ), 0 );
 
 	// Host alokacija
 	float *Coord = (float*) malloc( sizeof(float) * 4 * info->n );
-	float *V =    (float *) calloc( info->n, 4 * sizeof(float) );
+	float *V = (float *) calloc( info->n, 4 * sizeof(float) );
 	generateCoordinatesFloat4( Coord, info );
 
-	time.Tic();
+	t.Tic( );
+	gpu.CreateAndBuildKernel( "kernelVecLocal.cl", "kernelVecLocal" );
+
 	// Device alokacija in kopiranje podatkov
-	cl_mem devCoord    = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), Coord, &ret );
-	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE,                        info->n*sizeof(cl_float4), NULL,  &ret );
-	cl_mem devV        = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, info->n*sizeof(cl_float4), V,     &ret );
+	cl_mem devCoord		= gpu.CreateBuffer( info->n*sizeof(cl_float4), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, Coord );
+	cl_mem devCoordNew	= gpu.CreateBuffer( info->n*sizeof(cl_float4), CL_MEM_READ_WRITE,						 NULL );
+	cl_mem devV			= gpu.CreateBuffer( info->n*sizeof(cl_float4), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, V );
 
-	// Priprava programa
-	cl_program program;
-	BuildKernel( &program, &context, &device_id, "kernelVecLocal.cl" );
-	
-	// priprava šcepca 
-	cl_kernel krnl = clCreateKernel( program, "kernelVecLocal", &ret );
-	ret |= clSetKernelArg( krnl, 2, sizeof(cl_mem), (void *) &devV );
-	ret |= clSetKernelArg( krnl, 3, sizeof(cl_int), (void *) &(info->n) );
-	ret |= clSetKernelArg( krnl, 4, sizeof(cl_float), (void *) &(info->eps) );
-	ret |= clSetKernelArg( krnl, 5, sizeof(cl_float), (void *) &(info->kappa) );
-	ret |= clSetKernelArg( krnl, 6, sizeof(cl_float), (void *) &(info->dt) );
-	ret |= clSetKernelArg( krnl, 7, info->local_item_size * sizeof(cl_float4), NULL );
+	gpu.SetKernelArgument<cl_mem>( 2, &devV );
+	gpu.SetKernelArgument<cl_int>( 3, &(info->n) );
+	gpu.SetKernelArgument<cl_float>( 4, &(info->eps) );
+	gpu.SetKernelArgument<cl_float>( 5, &(info->kappa) );
+	gpu.SetKernelArgument<cl_float>( 6, &(info->dt) );
+	gpu.SetAndAllocKernelArgument( 7, info->local_item_size * sizeof(cl_float4) );
 
-	// zagon šèepca
+	// šcepec: zagon
 	for( int i = 0; i < info->steps; i++ ) {
-		ret = clSetKernelArg( krnl, 0, sizeof(cl_mem), (void *) &devCoord );
-		ret |= clSetKernelArg( krnl, 1, sizeof(cl_mem), (void *) &devCoordNew );
-		ret |= clEnqueueNDRangeKernel( command_queue, krnl, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
+		gpu.SetKernelArgument<cl_mem>( 0, &devCoord );
+		gpu.SetKernelArgument<cl_mem>( 1, &devCoordNew );
+		gpu.ExecuteKernel( );
 		SWAP_MEM( devCoord, devCoordNew );
 	}
 
 	// Prenos rezultatov na gostitelja
-	ret = clEnqueueReadBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), Coord, 0, NULL, NULL );
+	gpu.CopyDeviceToHost( &devCoord, Coord, info->n*sizeof(cl_float4) );
 
-	printf( "Cas izvajanja %lf\n", time.Toc());
+	printf( "Cas izvajanja: %lf\n", t.Toc( ) );
 	checkResultsFloat4( Coord, info->n );
-
-#pragma region Cleanup
-	ret = clFlush( command_queue );
-	ret = clFinish( command_queue );
-	ret = clReleaseKernel( krnl );
-	ret = clReleaseProgram( program );
-	ret = clReleaseMemObject( devV );
-	ret = clReleaseMemObject( devCoord );
-	ret = clReleaseMemObject( devCoordNew );
-	ret = clReleaseCommandQueue( command_queue );
-	ret = clReleaseContext( context );
 
 	free( V );
 	free( Coord );
-#pragma endregion
 }
 
 void timerCB( int ms ) {

@@ -146,6 +146,10 @@ void WOCL::CopyDeviceToHost( cl_mem *device, void *host, size_t size ) {
 	ret = clEnqueueReadBuffer( m_queue, *device, CL_TRUE, 0, size, host, 0, NULL, NULL );
 	CheckForError( ret, "clEnqueueReadBuffer" );
 }
+void WOCL::SetAndAllocKernelArgument( int idx, size_t size ) {
+	ret = clSetKernelArg( m_kernel, idx, size, NULL);
+	CheckForError( ret, "clSetKernelArg (alloc)" );
+}
 void WOCL::ExecuteKernel() {
 	ret = clEnqueueNDRangeKernel( m_queue, m_kernel, 1, NULL, &m_globalItemSize, &m_localItemSize, 0, NULL, NULL );
 	CheckForError( ret, "clEnqueueNDRangeKernel" );

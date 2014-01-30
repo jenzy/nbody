@@ -27,7 +27,7 @@ int main( int argc, char **argv ) {
 	bool doCPUOpt = false;
 	bool doGPU1 = true;
 	bool doGPU2 = true;
-	bool doGPU3 = false;
+	bool doGPU3 = true;
 	bool doCombo = false;
 	bool doGL = false;
 
