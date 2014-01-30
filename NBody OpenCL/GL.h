@@ -2,7 +2,8 @@
 
 class GL {
 public:
-	GL();
+	GL(size_t width, size_t height);
 	~GL();
+
 };
 
