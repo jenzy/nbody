@@ -8,10 +8,11 @@
 #include <GL/freeglut.h>
 
 #include "Main.h"
+#include "GL.h"
 
 int main( int argc, char **argv ) {
 	info_t info;
-	info.n = 1000; 				
+	info.n = 5000; 				
 	info.steps = 1000;	
 	info.sphereRadius = 10; //10
 	info.kappa = 1; 			
@@ -25,11 +26,11 @@ int main( int argc, char **argv ) {
 	bool doMPI = false;
 	bool doCPU = false;
 	bool doCPUOpt = false;
-	bool doGPU1 = true;
-	bool doGPU2 = true;
-	bool doGPU3 = true;
+	bool doGPU1 = false;
+	bool doGPU2 = false;
+	bool doGPU3 = false;
 	bool doCombo = false;
-	bool doGL = false;
+	bool doGL = true;
 
 	for( int i = 1; i < argc; i++ ) {
 		if( argv[i][0] == '-' ) {
@@ -98,7 +99,8 @@ int main( int argc, char **argv ) {
 		if( doGPU3 ) gpuVecLocal( &info ); 
 		if( doGL ) {
 			glutInit( &argc, argv );
-			gpuOpenGL( &info );
+			GL gpu = GL( 800, 800, &info );
+			gpu.Play();
 		}
 
 		printf( "\n===========================================================================\n" );

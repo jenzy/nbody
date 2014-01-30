@@ -241,7 +241,6 @@ void render( void ) {
 
 
 void gpuOpenGL( info_t *info ) {
-
 #pragma region Delitev dela
 	// Delitev dela
 	local_item_size = info->local_item_size;
