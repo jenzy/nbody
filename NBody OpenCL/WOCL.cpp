@@ -1,5 +1,6 @@
 #include <CL/cl.hpp>
 #include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include "WOCL.h"
@@ -8,70 +9,38 @@
 WOCL::WOCL( cl_device_type deviceType ) {
 	this->m_id = "WOCL";
 	
-	ret = clGetPlatformIDs( 1, &m_platform_id, NULL );									CheckForError( ret, "getPlatformIDs" );
-	ret = clGetDeviceIDs( m_platform_id, deviceType, 1, &m_device_id, NULL );			CheckForError( ret, "getDeviceIDs" );
+	ret = clGetPlatformIDs( 1, &m_platformId, NULL );									CheckForError( ret, "clGetPlatformIDs" );
+	ret = clGetDeviceIDs( m_platformId, deviceType, 1, &m_deviceId, NULL );				CheckForError( ret, "clGetDeviceIDs" );
 	
-	std::cout << GetPlatformName( &m_platform_id );
+	std::cout << "Naprava: " << GetDeviceName(&m_deviceId) << " (" << GetPlatformName( &m_platformId ) << ")" << std::endl;
 
+	m_context = clCreateContext( NULL, 1, &m_deviceId, NULL, NULL, &ret );				CheckForError( ret, "clCreateContext" );
+	m_queue = clCreateCommandQueue( m_context, m_deviceId, 0, &ret );					CheckForError( ret, "clCreateCommandQueue" );
 }
+WOCL::~WOCL() {
+	ret = clFlush( m_queue );
+	ret |= clFinish( m_queue );
 
-
-WOCL::~WOCL() {}
-
-std::string WOCL::CLErrorName( cl_int err ) {
-	switch( err ) {
-		case 0: return "CL_SUCCESS";
-		case -1: return "CL_DEVICE_NOT_FOUND";
-		case -2: return "CL_DEVICE_NOT_AVAILABLE";
-		case -3: return "CL_COMPILER_NOT_AVAILABLE";
-		case -4: return "CL_MEM_OBJECT_ALLOCATION_FAILURE";
-		case -5: return "CL_OUT_OF_RESOURCES";
-		case -6: return "CL_OUT_OF_HOST_MEMORY";
-		case -7: return "CL_PROFILING_INFO_NOT_AVAILABLE";
-		case -8: return "CL_MEM_COPY_OVERLAP";
-		case -9: return "CL_IMAGE_FORMAT_MISMATCH";
-		case -10: return "CL_IMAGE_FORMAT_NOT_SUPPORTED";
-		case -11: return "CL_BUILD_PROGRAM_FAILURE";
-		case -12: return "CL_MAP_FAILURE";
-
-		case -30: return "CL_INVALID_VALUE";
-		case -31: return "CL_INVALID_DEVICE_TYPE";
-		case -32: return "CL_INVALID_PLATFORM";
-		case -33: return "CL_INVALID_DEVICE";
-		case -34: return "CL_INVALID_CONTEXT";
-		case -35: return "CL_INVALID_QUEUE_PROPERTIES";
-		case -36: return "CL_INVALID_COMMAND_QUEUE";
-		case -37: return "CL_INVALID_HOST_PTR";
-		case -38: return "CL_INVALID_MEM_OBJECT";
-		case -39: return "CL_INVALID_IMAGE_FORMAT_DESCRIPTOR";
-		case -40: return "CL_INVALID_IMAGE_SIZE";
-		case -41: return "CL_INVALID_SAMPLER";
-		case -42: return "CL_INVALID_BINARY";
-		case -43: return "CL_INVALID_BUILD_OPTIONS";
-		case -44: return "CL_INVALID_PROGRAM";
-		case -45: return "CL_INVALID_PROGRAM_EXECUTABLE";
-		case -46: return "CL_INVALID_KERNEL_NAME";
-		case -47: return "CL_INVALID_KERNEL_DEFINITION";
-		case -48: return "CL_INVALID_KERNEL";
-		case -49: return "CL_INVALID_ARG_INDEX";
-		case -50: return "CL_INVALID_ARG_VALUE";
-		case -51: return "CL_INVALID_ARG_SIZE";
-		case -52: return "CL_INVALID_KERNEL_ARGS";
-		case -53: return "CL_INVALID_WORK_DIMENSION";
-		case -54: return "CL_INVALID_WORK_GROUP_SIZE";
-		case -55: return "CL_INVALID_WORK_ITEM_SIZE";
-		case -56: return "CL_INVALID_GLOBAL_OFFSET";
-		case -57: return "CL_INVALID_EVENT_WAIT_LIST";
-		case -58: return "CL_INVALID_EVENT";
-		case -59: return "CL_INVALID_OPERATION";
-		case -60: return "CL_INVALID_GL_OBJECT";
-		case -61: return "CL_INVALID_BUFFER_SIZE";
-		case -62: return "CL_INVALID_MIP_LEVEL";
-		case -63: return "CL_INVALID_GLOBAL_WORK_SIZE";
-		default: return "Unknown OpenCL error";
+	for( int i = 0; i < m_devBuffers.size(); i++ ) {
+		ret |= clReleaseMemObject( m_devBuffers[i].first );
 	}
-}
 
+	/*ret |= clReleaseKernel( krnl );
+	ret |= clReleaseProgram( program );
+	ret |= clReleaseMemObject( devX );
+	ret |= clReleaseMemObject( devY );
+	ret |= clReleaseMemObject( devZ );
+	ret |= clReleaseMemObject( devM );
+	ret |= clReleaseMemObject( devNewX );
+	ret |= clReleaseMemObject( devNewY );
+	ret |= clReleaseMemObject( devNewZ );
+	ret |= clReleaseMemObject( devVX );
+	ret |= clReleaseMemObject( devVY );
+	ret |= clReleaseMemObject( devVZ );*/
+	ret |= clReleaseCommandQueue( m_queue );
+	ret |= clReleaseContext( m_context );
+	CheckForError( ret, "Cleanup" );
+}
 
 bool WOCL::CheckForError( cl_int err, std::string name ) {
 	if( err == CL_SUCCESS ) return false;
@@ -81,9 +50,9 @@ bool WOCL::CheckForError( cl_int err, std::string name ) {
 		return true;
 	}
 }
-
-void WOCL::SetExitOnError( bool exit ){
-	EXIT_ON_ERROR = exit;
+void WOCL::PrintError( std::string error ) {
+	std::cout << "ERROR: " << error << std::endl;
+	if( EXIT_ON_ERROR ) exit( -1 );
 }
 
 std::string WOCL::GetPlatformName( cl_platform_id *platformId ) {
@@ -95,4 +64,89 @@ std::string WOCL::GetPlatformName( cl_platform_id *platformId ) {
 	std::string name( buff );
 	free( buff );
 	return name;
+}
+std::string WOCL::GetDeviceName( cl_device_id *deviceId ) {
+	size_t buff_len;
+	clGetDeviceInfo( *deviceId, CL_DEVICE_NAME, 0, NULL, &buff_len );
+	char *buff = (char *) malloc( sizeof(char) *(buff_len + 1) );  buff[buff_len] = '\0';
+	clGetDeviceInfo( *deviceId, CL_DEVICE_NAME, buff_len, buff, NULL );
+	
+	std::string name( buff );
+	free( buff );
+	return name;
+}
+std::string WOCL::GetBuildLog( cl_program *program, cl_device_id *device_id ) {
+	size_t build_log_len;
+	char *log;
+	clGetProgramBuildInfo( *program, *device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &build_log_len );
+	log = (char *) malloc( sizeof(char) *(build_log_len + 1) );
+	clGetProgramBuildInfo( *program, *device_id, CL_PROGRAM_BUILD_LOG, build_log_len, log, NULL ); log[build_log_len] = '\0';
+	std::string tmp( log );
+	free( log );
+	return tmp;
+}
+char* WOCL::ReadWholeFile( char *filename, int *outLen ) {
+	FILE *file;
+	fopen_s( &file, filename, "rb" );
+	if( file == NULL ) {
+		std::cout << "ERROR while opening file" << filename << std::endl;
+		exit( -1 );
+	}
+
+	// get length
+	fseek( file, 0, SEEK_END );
+	int len = ftell( file );
+	rewind( file );
+	if( outLen != nullptr )
+		*outLen = len;
+
+	// read file
+	char *source = (char*) malloc( len + 1 );
+	fread_s( source, len, sizeof(char), len, file );
+	source[len] = '\0';
+	fclose( file );
+
+	return source;
+}
+
+void WOCL::SetWorkSize( size_t numItemsPerGroup, size_t numGroups, size_t numItemsGlobal ) {
+	if( numItemsPerGroup == 0 )		PrintError( "Invalid parameters to SetWorkSize, numItemsPerGroup can't be 0." );
+	m_localItemSize = numItemsPerGroup;
+
+	if( numGroups != 0 ) {
+		m_globalItemSize = m_localItemSize * numGroups;
+	} else {
+		if( numItemsGlobal == 0 )
+			PrintError( "Invalid parameters to SetWorkSize, numGroups and numItemsGlobal can't both be 0." );
+		m_globalItemSize = numItemsGlobal;
+	}
+
+	printf( "Delitev dela: local: %d | num_groups: %d | global: %d\n",
+			m_localItemSize, m_globalItemSize / m_localItemSize, m_globalItemSize );
+}
+void WOCL::CreateAndBuildKernel( char *filename, char *functionName ) {
+	char *source_str = ReadWholeFile( filename, NULL );
+	m_program = clCreateProgramWithSource( m_context, 1, (const char **) &source_str, NULL, &ret );			CheckForError( ret, "clCreateProgramWithSource" );
+	
+	ret = clBuildProgram( m_program, 1, &m_deviceId, NULL, NULL, NULL );
+	if( ret != CL_SUCCESS ) {
+		std::cout << "Build log: " << std::endl << WOCL::GetBuildLog( &m_program, &m_deviceId ) << std::endl;
+		CheckForError( ret, "clBuildProgram" );
+	}
+	free( source_str );
+
+	m_kernel = clCreateKernel( m_program, functionName, &ret );												CheckForError( ret, "clCreateKernel" );
+}
+cl_mem WOCL::CreateBuffer( size_t size, cl_mem_flags flags, void *hostBuffer ) {
+	cl_mem buff = clCreateBuffer( m_context, flags, size, hostBuffer, &ret );		CheckForError( ret, "clcreateBuffer" );
+	m_devBuffers.push_back( std::make_pair( buff, size ) );
+	return buff;
+}
+void WOCL::CopyDeviceToHost( cl_mem *device, void *host, size_t size ) {
+	ret = clEnqueueReadBuffer( m_queue, *device, CL_TRUE, 0, size, host, 0, NULL, NULL );
+	CheckForError( ret, "clEnqueueReadBuffer" );
+}
+void WOCL::ExecuteKernel() {
+	ret = clEnqueueNDRangeKernel( m_queue, m_kernel, 1, NULL, &m_globalItemSize, &m_localItemSize, 0, NULL, NULL );
+	CheckForError( ret, "clEnqueueNDRangeKernel" );
 }
