@@ -4,10 +4,11 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include "GL\freeglut.h"
 
 class WOCL {
 public:
-	WOCL( cl_device_type device_type );
+	WOCL( cl_device_type deviceType, bool shareWithGL = false );
 	~WOCL();
 
 private:
@@ -96,7 +97,8 @@ public:
 	void SetWorkSize( size_t numItemsPerGroup, size_t numGroups, size_t numItemsGlobal );
 	void CreateAndBuildKernel( char *filename, char *functionName );
 
-	cl_mem CreateBuffer( size_t size, cl_mem_flags flags, void * hostBuffer );
+	cl_mem CreateBuffer( size_t size, cl_mem_flags flags, void *hostBuffer );
+	cl_mem CreateBufferFromGLBuffer( cl_mem_flags flags, GLuint buffer);
 	void CopyDeviceToHost( cl_mem *device, void *host, size_t size );
 	void ExecuteKernel();
 
@@ -105,5 +107,7 @@ public:
 		ret = clSetKernelArg( m_kernel, idx, sizeof(T), (void *) parameter );
 		CheckForError( ret, "clSetKernelArg" );
 	}
+
+	cl_command_queue GetQueue( );
 };
 

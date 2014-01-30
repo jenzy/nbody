@@ -6,15 +6,25 @@
 #include "WOCL.h"
 
 
-WOCL::WOCL( cl_device_type deviceType ) {
+WOCL::WOCL( cl_device_type deviceType, bool shareWithGL ) {
 	this->m_id = "WOCL";
-	
+
 	ret = clGetPlatformIDs( 1, &m_platformId, NULL );									CheckForError( ret, "clGetPlatformIDs" );
 	ret = clGetDeviceIDs( m_platformId, deviceType, 1, &m_deviceId, NULL );				CheckForError( ret, "clGetDeviceIDs" );
-	
-	std::cout << "Naprava: " << GetDeviceName(&m_deviceId) << " (" << GetPlatformName( &m_platformId ) << ")" << std::endl;
 
-	m_context = clCreateContext( NULL, 1, &m_deviceId, NULL, NULL, &ret );				CheckForError( ret, "clCreateContext" );
+	std::cout << "Naprava: " << GetDeviceName( &m_deviceId ) << " (" << GetPlatformName( &m_platformId ) << ")" << std::endl;
+
+	if( shareWithGL ) {
+		cl_context_properties props[] =	{
+			CL_GL_CONTEXT_KHR, (cl_context_properties) wglGetCurrentContext(),
+			CL_WGL_HDC_KHR, (cl_context_properties) wglGetCurrentDC(),
+			CL_CONTEXT_PLATFORM, (cl_context_properties) (m_platformId),
+			0
+		};
+		m_context = clCreateContext( props, 1, &m_deviceId, NULL, NULL, &ret );			CheckForError( ret, "clCreateContext (shared)" );
+	} else {
+		m_context = clCreateContext( NULL, 1, &m_deviceId, NULL, NULL, &ret );			CheckForError( ret, "clCreateContext" );
+	}
 	m_queue = clCreateCommandQueue( m_context, m_deviceId, 0, &ret );					CheckForError( ret, "clCreateCommandQueue" );
 }
 WOCL::~WOCL() {
@@ -138,8 +148,13 @@ void WOCL::CreateAndBuildKernel( char *filename, char *functionName ) {
 	m_kernel = clCreateKernel( m_program, functionName, &ret );												CheckForError( ret, "clCreateKernel" );
 }
 cl_mem WOCL::CreateBuffer( size_t size, cl_mem_flags flags, void *hostBuffer ) {
-	cl_mem buff = clCreateBuffer( m_context, flags, size, hostBuffer, &ret );		CheckForError( ret, "clcreateBuffer" );
+	cl_mem buff = clCreateBuffer( m_context, flags, size, hostBuffer, &ret );		CheckForError( ret, "clCreateBuffer" );
 	m_devBuffers.push_back( std::make_pair( buff, size ) );
+	return buff;
+}
+cl_mem WOCL::CreateBufferFromGLBuffer( cl_mem_flags flags, GLuint buffer ) {
+	cl_mem buff = clCreateFromGLBuffer( m_context, flags, buffer, &ret );			CheckForError( ret, "clCreateFromGLBuffer" );
+	m_devBuffers.push_back( std::make_pair( buff, 0 ) );
 	return buff;
 }
 void WOCL::CopyDeviceToHost( cl_mem *device, void *host, size_t size ) {
@@ -153,4 +168,7 @@ void WOCL::SetAndAllocKernelArgument( int idx, size_t size ) {
 void WOCL::ExecuteKernel() {
 	ret = clEnqueueNDRangeKernel( m_queue, m_kernel, 1, NULL, &m_globalItemSize, &m_localItemSize, 0, NULL, NULL );
 	CheckForError( ret, "clEnqueueNDRangeKernel" );
+}
+cl_command_queue WOCL::GetQueue() {
+	return m_queue;
 }
