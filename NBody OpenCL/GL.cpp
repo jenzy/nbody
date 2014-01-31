@@ -27,7 +27,7 @@ GL::GL( int width, int height, info_t *info ) {
 	glutDisplayFunc( GL::Display );
 	glutTimerFunc( REFRESH_EVERY_X_MS, GL::Refresh, REFRESH_EVERY_X_MS );	//determin a minimum time between frames
 	glutKeyboardFunc( Keyboard );
-	glutSpecialFunc( KeyboardSpecial ); //stupid glut
+	glutSpecialFunc( KeyboardSpecial );
 	//glutMouseFunc( appMouse );
 	//glutMotionFunc( appMotion );
 #pragma endregion
