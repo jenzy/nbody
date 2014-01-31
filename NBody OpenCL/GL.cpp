@@ -10,6 +10,7 @@ GLuint GL::m_vboVertices[2];
 cl_mem GL::devCoord[2];
 int GL::idx = 0;
 float GL::angleY = 45;
+float GL::cameraDistance = 25.0f;
 
 GL::GL( int width, int height, info_t *info ) {
 	printf( "\n\n== OpenGL + OpenCL ==          N: %d\n", info->n );
@@ -150,6 +151,12 @@ void GL::Keyboard( unsigned char key, int x, int y ) {
 		case ' ':
 			m_paused = !m_paused;
 			break;
+		case '+':
+			cameraDistance -= DELTA_CAMERA_DISTANCE;
+			break;
+		case '-':
+			cameraDistance += DELTA_CAMERA_DISTANCE;
+			break;
 		default:
 			break;
 	}
@@ -171,7 +178,7 @@ void GL::KeyboardSpecial( int key, int x, int y ) {
 void GL::UpdateView() {
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity( );
-	glTranslatef( 0.0, 0.0, -25.0f );
+	glTranslatef( 0.0, 0.0, -cameraDistance );
 	glRotatef( angleY, 0, 1, 0 );
 	glRotatef( 25, 1, 0, 0 );
 }
