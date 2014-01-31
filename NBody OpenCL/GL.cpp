@@ -11,6 +11,10 @@ cl_mem GL::devCoord[2];
 int GL::idx = 0;
 float GL::angleY = 45;
 
+GLuint GL::m_shaderVert;
+GLuint GL::m_shaderFrag;
+GLuint GL::m_program;
+
 GL::GL( int width, int height, info_t *info ) {
 	printf( "\n\n== OpenGL + OpenCL ==          N: %d\n", info->n );
 	m_info = info;
@@ -46,7 +50,7 @@ GL::~GL() {
 
 void GL::Init() {
 	glClearColor( 0.0, 0.0, 0.0, 1.0 );
-	glDisable( GL_DEPTH_TEST );
+	//glDisable( GL_DEPTH_TEST );
 
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -57,6 +61,15 @@ void GL::Init() {
 	glEnableClientState( GL_VERTEX_ARRAY );
 	//glEnableClientState( GL_COLOR_ARRAY );
 	//glDisableClientState( GL_NORMAL_ARRAY );
+
+	m_shaderVert = CreateShader( GL_VERTEX_SHADER, "shader.vertex.glsl" );
+	m_shaderFrag = CreateShader( GL_FRAGMENT_SHADER, "shader.fragment.glsl" );
+	m_program = glCreateProgram( );
+	glAttachShader( m_program, m_shaderVert );
+	glAttachShader( m_program, m_shaderFrag );
+	glLinkProgram( m_program );
+	glUseProgram( m_program );
+
 
 #pragma region Projection Matrix
 	int height = glutGet( GLUT_WINDOW_HEIGHT );
@@ -174,4 +187,31 @@ void GL::UpdateView() {
 	glTranslatef( 0.0, 0.0, -25.0f );
 	glRotatef( angleY, 0, 1, 0 );
 	glRotatef( 25, 1, 0, 0 );
+}
+
+
+void GL::CheckShaderCompileStatus( GLuint shader ) {
+	int bufflen;
+	glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &bufflen );
+	if( bufflen > 1 ) {
+		GLchar* log_string = new char[bufflen + 1];
+		glGetShaderInfoLog( m_shaderVert, bufflen, 0, log_string );
+		printf( "Log:\n%s", log_string );
+		delete log_string;
+	}
+
+	int success;
+	glGetShaderiv( shader, GL_COMPILE_STATUS, &success );
+	if( success != GL_TRUE ) {
+		printf( "Failed to compile shader.\n" );
+		exit( -1001 );
+	} 
+}
+GLint GL::CreateShader( GLenum shaderType, char *filename ) {
+	GLint shader = glCreateShader( shaderType );
+	const GLchar *src = WOCL::ReadWholeFile( filename, NULL );
+	glShaderSource( shader, 1, &src, NULL );
+	glCompileShader( shader );
+	CheckShaderCompileStatus( shader );
+	return shader;
 }

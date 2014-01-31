@@ -113,7 +113,10 @@
       <Command>copy "$(ProjectDir)\kernelCombo.cl" "$(TargetDir)"
 copy "$(ProjectDir)\kernelFloat1.cl" "$(TargetDir)"
 copy "$(ProjectDir)\kernelVec.cl" "$(TargetDir)"
-copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
+copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"
+copy "$(ProjectDir)\shader.vertex.glsl" "$(TargetDir)"
+copy "$(ProjectDir)\shader.fragment.glsl" "$(TargetDir)"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -159,7 +162,10 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
       <Command>copy "$(ProjectDir)\kernelCombo.cl" "$(TargetDir)"
 copy "$(ProjectDir)\kernelFloat1.cl" "$(TargetDir)"
 copy "$(ProjectDir)\kernelVec.cl" "$(TargetDir)"
-copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
+copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"
+copy "$(ProjectDir)\shader.vertex.glsl" "$(TargetDir)"
+copy "$(ProjectDir)\shader.fragment.glsl" "$(TargetDir)"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -195,6 +201,8 @@ copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
     </None>
+    <None Include="shader.fragment.glsl" />
+    <None Include="shader.vertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

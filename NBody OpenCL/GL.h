@@ -24,6 +24,10 @@ private:
 	static int idx;
 	static float angleY;
 
+	static GLuint m_shaderVert;
+	static GLuint m_shaderFrag;
+	static GLuint m_program;
+
 
 	static void Display( void );
 	static void Render( void );
@@ -31,5 +35,8 @@ private:
 	static void Keyboard( unsigned char key, int x, int y );
 	static void KeyboardSpecial( int key, int x, int y );
 	static void UpdateView();
+
+	static void CheckShaderCompileStatus( GLuint shader );
+	static GLint CreateShader( GLenum shaderType, char *filename );
 };
 
