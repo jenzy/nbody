@@ -1,14 +1,27 @@
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
 #include <cstring>
-#include <cmath>
-#include <CL/cl.h>
+#include <iostream>
 #include <mpi.h>
 #include <GL/freeglut.h>
 
 #include "Main.h"
 #include "GL.h"
+
+void printHelp() {
+	using namespace std;
+	cout << "Arguments: " << endl;
+	cout << "  -n <int> \t Set number of bodies" << endl;
+	cout << "  -s <int> \t Set number of steps" << endl;
+	cout << "  -cpu and -nocpu \t Run (or don't) the simulation on CPU" << endl;
+	cout << "  -cpuopt, -nocpuopt \t Run (or don't) the simulation on CPU - the optimised version" << endl;
+	cout << "  -gpu1 and -nogpu1 \t Run (or don't) the simulation on GPU - the basic version" << endl;
+	cout << "  -gpu2 and -nogpu2 \t Run (or don't) the simulation on GPU - the vectorized version" << endl;
+	cout << "  -gpu3 and -nogpu3 \t Run (or don't) the simulation on GPU - the vectorized version with the use of local memory" << endl;
+	cout << "  -mpi and -nompi \t Run (or don't) the simulation with MPI - you really should use mpiexec..." << endl;
+	cout << "  -combo and -nocombo \t Run (or don't) the simulation with MPI and OpenCL - you really should use mpiexec..." << endl;
+	cout << "  -GL and -noGL \t Display (or don't) the simulation with OpenGL and OpenCL - so pretty" << endl;
+}
 
 int main( int argc, char **argv ) {
 	info_t info;
@@ -72,8 +85,12 @@ int main( int argc, char **argv ) {
 				doGL = true;
 			else if( strcmp( argv[i], "-noGL" ) == 0 )
 				doGL = false;
+		} else {
+			printHelp();
+			exit( 0 );
 		}
 	}
+
 
 	int rank;
 	MPI_Init( &argc, &argv );
@@ -103,7 +120,7 @@ int main( int argc, char **argv ) {
 			gpu.Play();
 		}
 
-		printf( "\n===========================================================================\n" );
+		std::cout << std::endl << "===========================================================================" << std:: endl;
 	}
 
 	MPI_Finalize();
