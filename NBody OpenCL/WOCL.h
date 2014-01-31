@@ -101,6 +101,8 @@ public:
 	cl_mem CreateBufferFromGLBuffer( cl_mem_flags flags, GLuint buffer);
 	void CopyDeviceToHost( cl_mem *device, void *host, size_t size );
 	void ExecuteKernel();
+	void AcquireObjectsFromGLAndFinish( cl_uint num, cl_mem *objects );
+	void ReleaseObjectsToGLAndFinish( cl_uint num, cl_mem *objects );
 
 	void SetAndAllocKernelArgument( int idx, size_t size );
 	template<typename T> void SetKernelArgument( int idx, T *parameter ) {

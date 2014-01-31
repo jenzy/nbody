@@ -26,6 +26,7 @@ private:
 
 
 	static void Display( void );
+	static void Render( void );
 	static void Refresh( int ms );
 	static void Keyboard( unsigned char key, int x, int y );
 	static void KeyboardSpecial( int key, int x, int y );

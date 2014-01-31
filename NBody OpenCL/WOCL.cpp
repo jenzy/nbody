@@ -162,3 +162,11 @@ void WOCL::ExecuteKernel() {
 cl_command_queue WOCL::GetQueue() {
 	return m_queue;
 }
+void WOCL::AcquireObjectsFromGLAndFinish( cl_uint num, cl_mem *objects ) {
+	ret = clEnqueueAcquireGLObjects( m_queue, num, objects, 0, NULL, NULL );		CheckForError( ret, "clEnqueueAcquireGLObjects" );
+	ret = clFinish( m_queue );														CheckForError( ret, "clFinish @ AcquireObjectsFromGL" );
+}
+void WOCL::ReleaseObjectsToGLAndFinish( cl_uint num, cl_mem *objects ) {
+	ret = clEnqueueReleaseGLObjects( m_queue, num, objects, 0, NULL, NULL );		CheckForError( ret, "clEnqueueReleaseGLObjects" );
+	ret = clFinish( m_queue );														CheckForError( ret, "clFinish @ ReleaseObjectsToGL" );
+}

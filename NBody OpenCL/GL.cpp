@@ -48,6 +48,16 @@ void GL::Init() {
 	glClearColor( 0.0, 0.0, 0.0, 1.0 );
 	glDisable( GL_DEPTH_TEST );
 
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	glEnable( GL_POINT_SMOOTH );
+	glPointSize( 2. );
+	glColor3f( 1.0f, 1.0f, 1.0f );
+
+	glEnableClientState( GL_VERTEX_ARRAY );
+	//glEnableClientState( GL_COLOR_ARRAY );
+	//glDisableClientState( GL_NORMAL_ARRAY );
+
 #pragma region Projection Matrix
 	int height = glutGet( GLUT_WINDOW_HEIGHT );
 	int width = glutGet( GLUT_WINDOW_WIDTH );
@@ -55,11 +65,6 @@ void GL::Init() {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
 	gluPerspective( 90.0, (GLfloat) width / (GLfloat) width, 0.1, 1000.0 );
-#pragma endregion
-
-#pragma region View Matrix
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
 #pragma endregion
 
 	// Host alokacija
@@ -77,7 +82,6 @@ void GL::Init() {
 
 	devCoord[0] = CL->CreateBufferFromGLBuffer( CL_MEM_READ_WRITE, m_vboVertices[0] );
 	devCoord[1] = CL->CreateBufferFromGLBuffer( CL_MEM_READ_WRITE, m_vboVertices[1] );
-	//devCoord[1] = CL->CreateBuffer( m_info->n*sizeof(cl_float4), CL_MEM_READ_WRITE, NULL );
 	cl_mem devV = CL->CreateBuffer( m_info->n*sizeof(cl_float4), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, V );
 
 	free( Coord );
@@ -101,57 +105,33 @@ void GL::Play( ) {
 void GL::Display( void ) {
 	if( m_paused ) return;
 
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	cl_int ret;
-
 	glFinish( );
-	ret = clEnqueueAcquireGLObjects( CL->GetQueue(), 2, devCoord, 0, NULL, NULL );
-	ret = clFinish( CL->GetQueue( ) );
+	CL->AcquireObjectsFromGLAndFinish( 2, devCoord );
 
 	//execute the kernel
-	CL->SetKernelArgument<cl_mem>( 0, devCoord );
-	CL->SetKernelArgument<cl_mem>( 1, (devCoord+1) );
+	CL->SetKernelArgument<cl_mem>( 0, (devCoord+idx) );
+	CL->SetKernelArgument<cl_mem>( 1, (devCoord+((idx+1)%2)) );
 	CL->ExecuteKernel( );
-	clFinish( CL->GetQueue( ) );
 
-	//Release the VBOs so OpenGL can play with them
-	clEnqueueReleaseGLObjects( CL->GetQueue( ), 2, devCoord, 0, NULL, NULL );
-	clFinish( CL->GetQueue( ) );
+	CL->ReleaseObjectsToGLAndFinish( 2, devCoord );
 
-	SWAP_MEM( devCoord[0], devCoord[1] );
+	idx = ++idx % 2;
+	Render();
+}
 
+void GL::Render( void ) {
+	if( m_paused ) return;
 
-	UpdateView();
-	//render the particles from VBOs
-	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	glEnable( GL_POINT_SMOOTH );
-	glPointSize( 2. );
-	glColor3f( 1.0f, 1.0f, 1.0f );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	UpdateView( );
 
-	//printf("color buffer\n");
 	//glBindBuffer( GL_ARRAY_BUFFER, example->c_vbo );
 	//glColorPointer( 4, GL_FLOAT, 0, 0 );
 
-	//printf("vertex buffer\n");
 	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[idx] );
 	glVertexPointer( 3, GL_FLOAT, sizeof(float), 0 );
 
-	idx = ++idx % 2;
-
-	//printf("enable client state\n");
-	glEnableClientState( GL_VERTEX_ARRAY );
-	//glEnableClientState( GL_COLOR_ARRAY );
-
-	//Need to disable these for blender
-	glDisableClientState( GL_NORMAL_ARRAY );
-
-	//printf("draw arrays\n");
 	glDrawArrays( GL_POINTS, 0, m_info->n );
-
-	//printf("disable stuff\n");
-	//glDisableClientState( GL_COLOR_ARRAY );
-	glDisableClientState( GL_VERTEX_ARRAY );
 
 	glutSwapBuffers( );
 }
