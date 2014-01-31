@@ -3,14 +3,13 @@
 #include "GL.h"
 #include "Main.h"
 
-#define REFRESH_EVERY_X_MS 30
-
 bool GL::m_paused = false;
 WOCL *GL::CL = nullptr;
 info_t *GL::m_info;
 GLuint GL::m_vboVertices;
 cl_mem GL::devCoord;
 cl_mem GL::devCoordNew;
+float GL::angleY = 45;
 
 GL::GL( int width, int height, info_t *info ) {
 	printf( "\n\n== OpenGL + OpenCL ==          N: %d\n", info->n );
@@ -28,6 +27,7 @@ GL::GL( int width, int height, info_t *info ) {
 	glutDisplayFunc( GL::Display );
 	glutTimerFunc( REFRESH_EVERY_X_MS, GL::Refresh, REFRESH_EVERY_X_MS );	//determin a minimum time between frames
 	glutKeyboardFunc( Keyboard );
+	glutSpecialFunc( KeyboardSpecial ); //stupid glut
 	//glutMouseFunc( appMouse );
 	//glutMotionFunc( appMotion );
 #pragma endregion
@@ -59,11 +59,7 @@ void GL::Init() {
 
 #pragma region View Matrix
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity( );
-	glTranslatef( 0.0, 0.0, -25.0f );
-	glRotatef( 45, 0, 1, 0 );
-	glRotatef( 25, 1, 0, 0 );
+	
 #pragma endregion
 
 	// Host alokacija
@@ -120,6 +116,8 @@ void GL::Display( void ) {
 
 	SWAP_MEM( devCoord, devCoordNew );
 
+
+	UpdateView();
 	//render the particles from VBOs
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -169,4 +167,25 @@ void GL::Keyboard( unsigned char key, int x, int y ) {
 		default:
 			break;
 	}
+}
+
+void GL::KeyboardSpecial( int key, int x, int y ) {
+	switch( key ) {
+		case GLUT_KEY_LEFT:
+			angleY -= DELTA_ANGLE_Y;
+			break;
+		case GLUT_KEY_RIGHT:
+			angleY += DELTA_ANGLE_Y;
+			break;
+		default:
+			break;
+	}
+}
+
+void GL::UpdateView() {
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity( );
+	glTranslatef( 0.0, 0.0, -25.0f );
+	glRotatef( angleY, 0, 1, 0 );
+	glRotatef( 25, 1, 0, 0 );
 }

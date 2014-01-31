@@ -4,6 +4,9 @@
 #include <GL/freeglut.h>
 #include "Main.h"
 
+#define REFRESH_EVERY_X_MS 30
+#define DELTA_ANGLE_Y 1
+
 class GL {
 public:
 	GL( int width, int height, info_t *info );
@@ -19,10 +22,13 @@ private:
 	static GLuint m_vboVertices;
 	static cl_mem devCoord;
 	static cl_mem devCoordNew;
+	static float angleY;
 
 
 	static void Display( void );
 	static void Refresh( int ms );
 	static void Keyboard( unsigned char key, int x, int y );
+	static void KeyboardSpecial( int key, int x, int y );
+	static void UpdateView();
 };
 
