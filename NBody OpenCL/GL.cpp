@@ -15,6 +15,7 @@ float GL::cameraDistance = 25.0f;
 GLuint GL::m_shaderVert;
 GLuint GL::m_shaderFrag;
 GLuint GL::m_program;
+GLint GL::m_uniformDistToCamera = 1337;
 
 GL::GL( int width, int height, info_t *info ) {
 	printf( "\n\n== OpenGL + OpenCL ==          N: %d\n", info->n );
@@ -71,6 +72,8 @@ void GL::Init() {
 	glLinkProgram( m_program );
 	glUseProgram( m_program );
 
+	m_uniformDistToCamera = glGetUniformLocation( m_program, "distCameraToCenter" );
+	glUniform1f( m_uniformDistToCamera, cameraDistance );
 
 #pragma region Projection Matrix
 	int height = glutGet( GLUT_WINDOW_HEIGHT );
@@ -138,9 +141,6 @@ void GL::Render( void ) {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	UpdateView( );
 
-	//glBindBuffer( GL_ARRAY_BUFFER, example->c_vbo );
-	//glColorPointer( 4, GL_FLOAT, 0, 0 );
-
 	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[idx] );
 	glVertexPointer( 3, GL_FLOAT, sizeof(float), 0 );
 
@@ -165,9 +165,13 @@ void GL::Keyboard( unsigned char key, int x, int y ) {
 			break;
 		case '+':
 			cameraDistance -= DELTA_CAMERA_DISTANCE;
+			if( m_uniformDistToCamera != 1337 )
+				glUniform1f( m_uniformDistToCamera, cameraDistance );
 			break;
 		case '-':
 			cameraDistance += DELTA_CAMERA_DISTANCE;
+			if( m_uniformDistToCamera != 1337 )
+				glUniform1f( m_uniformDistToCamera, cameraDistance );
 			break;
 		default:
 			break;
