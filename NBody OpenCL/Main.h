@@ -28,7 +28,6 @@ void cpuOpt( info_t *info );
 void gpu( info_t *info );
 void gpuVec( info_t *info );
 void gpuVecLocal( info_t *info );
-void gpuOpenGL( info_t *info );
 
 // Helper.cpp
 float checkResults( float *X, float *Y, float *Z, int len );
