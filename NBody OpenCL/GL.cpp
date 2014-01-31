@@ -55,7 +55,7 @@ void GL::Init() {
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	glEnable( GL_POINT_SMOOTH );
-	glPointSize( 2. );
+	glPointSize( 6. );
 	glColor3f( 1.0f, 1.0f, 1.0f );
 
 	glEnableClientState( GL_VERTEX_ARRAY );
@@ -113,7 +113,6 @@ void GL::Play( ) {
 
 	glutMainLoop( );
 }
-
 
 void GL::Display( void ) {
 	if( m_paused ) return;
@@ -186,7 +185,7 @@ void GL::UpdateView() {
 	glLoadIdentity( );
 	glTranslatef( 0.0, 0.0, -25.0f );
 	glRotatef( angleY, 0, 1, 0 );
-	glRotatef( 25, 1, 0, 0 );
+	//glRotatef( 25, 1, 0, 0 );
 }
 
 
@@ -195,7 +194,7 @@ void GL::CheckShaderCompileStatus( GLuint shader ) {
 	glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &bufflen );
 	if( bufflen > 1 ) {
 		GLchar* log_string = new char[bufflen + 1];
-		glGetShaderInfoLog( m_shaderVert, bufflen, 0, log_string );
+		glGetShaderInfoLog( shader, bufflen, 0, log_string );
 		printf( "Log:\n%s", log_string );
 		delete log_string;
 	}

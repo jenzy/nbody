@@ -1,4 +1,7 @@
+varying float distToCamera;
+
 void main()
 {
-	gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+	float alpha = 1.0 -  distToCamera/50.0;
+	gl_FragColor = vec4(gl_Color.rgb, alpha );
 }
