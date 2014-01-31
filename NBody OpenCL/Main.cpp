@@ -91,6 +91,10 @@ int main( int argc, char **argv ) {
 		}
 	}
 
+	if( !doCPU && !doCPUOpt && !doGPU1 && !doGPU2 && !doGPU3 && !doMPI && !doCombo && !doGL ) {
+		printHelp( );
+		exit( 0 );
+	}
 
 	int rank;
 	MPI_Init( &argc, &argv );
