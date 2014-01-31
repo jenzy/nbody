@@ -6,9 +6,9 @@
 bool GL::m_paused = false;
 WOCL *GL::CL = nullptr;
 info_t *GL::m_info;
-GLuint GL::m_vboVertices;
-cl_mem GL::devCoord;
-cl_mem GL::devCoordNew;
+GLuint GL::m_vboVertices[2];
+cl_mem GL::devCoord[2];
+int GL::idx = 0;
 float GL::angleY = 45;
 
 GL::GL( int width, int height, info_t *info ) {
@@ -68,12 +68,16 @@ void GL::Init() {
 	float *V = (float *) calloc( m_info->n, 4 * sizeof(float) );
 
 	// Device alokacija in kopiranje podatkov
-	glGenBuffers( 1, &m_vboVertices );
-	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices );
+	glGenBuffers( 2, m_vboVertices );
+	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[0] );
 	glBufferData( GL_ARRAY_BUFFER, sizeof(cl_float4) * m_info->n, Coord, GL_DYNAMIC_DRAW ); // upload data to video card
 
-	devCoord = CL->CreateBufferFromGLBuffer( CL_MEM_READ_WRITE, m_vboVertices );
-	devCoordNew = CL->CreateBuffer( m_info->n*sizeof(cl_float4), CL_MEM_READ_WRITE, NULL );
+	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[1] );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(cl_float4) * m_info->n, Coord, GL_DYNAMIC_DRAW ); // upload data to video card
+
+	devCoord[0] = CL->CreateBufferFromGLBuffer( CL_MEM_READ_WRITE, m_vboVertices[0] );
+	devCoord[1] = CL->CreateBufferFromGLBuffer( CL_MEM_READ_WRITE, m_vboVertices[1] );
+	//devCoord[1] = CL->CreateBuffer( m_info->n*sizeof(cl_float4), CL_MEM_READ_WRITE, NULL );
 	cl_mem devV = CL->CreateBuffer( m_info->n*sizeof(cl_float4), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, V );
 
 	free( Coord );
@@ -101,20 +105,20 @@ void GL::Display( void ) {
 	cl_int ret;
 
 	glFinish( );
-	ret = clEnqueueAcquireGLObjects( CL->GetQueue(), 1, &devCoord, 0, NULL, NULL );
+	ret = clEnqueueAcquireGLObjects( CL->GetQueue(), 2, devCoord, 0, NULL, NULL );
 	ret = clFinish( CL->GetQueue( ) );
 
 	//execute the kernel
-	CL->SetKernelArgument<cl_mem>( 0, &devCoord );
-	CL->SetKernelArgument<cl_mem>( 1, &devCoordNew );
+	CL->SetKernelArgument<cl_mem>( 0, devCoord );
+	CL->SetKernelArgument<cl_mem>( 1, (devCoord+1) );
 	CL->ExecuteKernel( );
 	clFinish( CL->GetQueue( ) );
 
 	//Release the VBOs so OpenGL can play with them
-	clEnqueueReleaseGLObjects( CL->GetQueue( ), 1, &devCoord, 0, NULL, NULL );
+	clEnqueueReleaseGLObjects( CL->GetQueue( ), 2, devCoord, 0, NULL, NULL );
 	clFinish( CL->GetQueue( ) );
 
-	SWAP_MEM( devCoord, devCoordNew );
+	SWAP_MEM( devCoord[0], devCoord[1] );
 
 
 	UpdateView();
@@ -130,8 +134,10 @@ void GL::Display( void ) {
 	//glColorPointer( 4, GL_FLOAT, 0, 0 );
 
 	//printf("vertex buffer\n");
-	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices );
+	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[idx] );
 	glVertexPointer( 3, GL_FLOAT, sizeof(float), 0 );
+
+	idx = ++idx % 2;
 
 	//printf("enable client state\n");
 	glEnableClientState( GL_VERTEX_ARRAY );

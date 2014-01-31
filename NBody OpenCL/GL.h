@@ -19,9 +19,9 @@ private:
 	static bool m_paused;
 	static WOCL *CL;
 	static info_t *m_info;
-	static GLuint m_vboVertices;
-	static cl_mem devCoord;
-	static cl_mem devCoordNew;
+	static GLuint m_vboVertices[2];
+	static cl_mem devCoord[2];
+	static int idx;
 	static float angleY;
 
 
