@@ -12,7 +12,7 @@ typedef struct _info {
 	double sphereRadius; 	/* nastavitve zacetne konfiguracije */
 	float kappa; 			/* gravitacijska konstanta */
 	float mass; 			/* masa teles */
-	float eps; 		    /* konstanta glajenja */
+	float eps; 				/* konstanta glajenja */
 	float dt; 			    /* casovna konstanta */
 	int seed;				/* seed za random */
 

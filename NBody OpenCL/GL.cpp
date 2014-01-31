@@ -3,34 +3,46 @@
 #include "GL.h"
 #include "Main.h"
 
-WOCL *GL::CL;
+#define REFRESH_EVERY_X_MS 30
+
+bool GL::m_paused = false;
+WOCL *GL::CL = nullptr;
 info_t *GL::m_info;
 GLuint GL::m_vboVertices;
 cl_mem GL::devCoord;
 cl_mem GL::devCoordNew;
 
 GL::GL( int width, int height, info_t *info ) {
+	printf( "\n\n== OpenGL + OpenCL ==          N: %d\n", info->n );
 	m_info = info;
 
+#pragma region Create GLUT Window
 	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
 	glutInitWindowSize( width, height);
 	glutInitWindowPosition( glutGet( GLUT_SCREEN_WIDTH ) / 2 - width/2, glutGet( GLUT_SCREEN_HEIGHT ) / 2 - height/2 );
 	glutCreateWindow( "N-Body" );
+	glewInit( );
+#pragma endregion
 
-	glutDisplayFunc( GL::Display ); //main rendering function
-	glutTimerFunc( 30, GL::Refresh, 30 ); //determin a minimum time between frames
-	//glutKeyboardFunc( appKeyboard );
+#pragma region Register GLUT Callbacks
+	glutDisplayFunc( GL::Display );
+	glutTimerFunc( REFRESH_EVERY_X_MS, GL::Refresh, REFRESH_EVERY_X_MS );	//determin a minimum time between frames
+	glutKeyboardFunc( Keyboard );
 	//glutMouseFunc( appMouse );
 	//glutMotionFunc( appMotion );
+#pragma endregion
 
-	glewInit( );
-
+#pragma region Initialize CL
 	CL = new WOCL( CL_DEVICE_TYPE_GPU, true );
 	CL->SetWorkSize( info->local_item_size, WOCL::CalculateNumOfGroups( info->local_item_size, info->n ), 0 );
 	CL->CreateAndBuildKernel( "kernelVec.cl", "kernelVec" );
+#pragma endregion
+
 }
 
-GL::~GL() {}
+GL::~GL() {
+	if( CL != nullptr ) delete CL;
+}
 
 void GL::Init() {
 	glClearColor( 0.0, 0.0, 0.0, 1.0 );
@@ -50,6 +62,8 @@ void GL::Init() {
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity( );
 	glTranslatef( 0.0, 0.0, -25.0f );
+	glRotatef( 45, 0, 1, 0 );
+	glRotatef( 25, 1, 0, 0 );
 #pragma endregion
 
 	// Host alokacija
@@ -85,6 +99,8 @@ void GL::Play( ) {
 
 
 void GL::Display( void ) {
+	if( m_paused ) return;
+
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	cl_int ret;
 
@@ -137,7 +153,20 @@ void GL::Display( void ) {
 }
 
 void GL::Refresh( int ms ) {
-	//this makes sure the appRender function is called every ms miliseconds
+	//this makes sure the Display function is called every ms miliseconds
 	glutTimerFunc( ms, GL::Refresh, ms );
 	glutPostRedisplay( );
+}
+
+void GL::Keyboard( unsigned char key, int x, int y ) {
+	switch( key ) {
+		case 27:		// ESC
+			exit( 0 );
+			break;
+		case ' ':
+			m_paused = !m_paused;
+			break;
+		default:
+			break;
+	}
 }

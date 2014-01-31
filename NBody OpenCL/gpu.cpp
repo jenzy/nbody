@@ -1,9 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <CL/cl.h>
 #include <CL/cl_platform.h>
 #include <CL/cl_gl.h>
-#include <time.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 

@@ -13,6 +13,7 @@ public:
 	void Init();
 
 private:
+	static bool m_paused;
 	static WOCL *CL;
 	static info_t *m_info;
 	static GLuint m_vboVertices;
@@ -22,5 +23,6 @@ private:
 
 	static void Display( void );
 	static void Refresh( int ms );
+	static void Keyboard( unsigned char key, int x, int y );
 };
 
