@@ -30,6 +30,7 @@ private:
 	static GLuint m_shaderFrag;
 	static GLuint m_program;
 	static GLint m_uniformDistToCamera;
+	static GLint m_uniformSphereRadius;
 
 	static void Display( void );
 	static void Render( void );

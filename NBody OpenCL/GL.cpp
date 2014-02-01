@@ -16,6 +16,7 @@ GLuint GL::m_shaderVert;
 GLuint GL::m_shaderFrag;
 GLuint GL::m_program;
 GLint GL::m_uniformDistToCamera = 1337;
+GLint GL::m_uniformSphereRadius;
 
 GL::GL( int width, int height, info_t *info ) {
 	printf( "\n\n== OpenGL + OpenCL ==          N: %d\n", info->n );
@@ -52,17 +53,14 @@ GL::~GL() {
 
 void GL::Init() {
 	glClearColor( 0.0, 0.0, 0.0, 1.0 );
-	//glDisable( GL_DEPTH_TEST );
+	glDisable( GL_DEPTH_TEST );
 
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	glEnable( GL_POINT_SMOOTH );
-	glPointSize( 6. );
+	glPointSize( 2. );
 	glColor3f( 1.0f, 1.0f, 1.0f );
-
 	glEnableClientState( GL_VERTEX_ARRAY );
-	//glEnableClientState( GL_COLOR_ARRAY );
-	//glDisableClientState( GL_NORMAL_ARRAY );
 
 	m_shaderVert = CreateShader( GL_VERTEX_SHADER, "shader.vertex.glsl" );
 	m_shaderFrag = CreateShader( GL_FRAGMENT_SHADER, "shader.fragment.glsl" );
@@ -74,6 +72,8 @@ void GL::Init() {
 
 	m_uniformDistToCamera = glGetUniformLocation( m_program, "distCameraToCenter" );
 	glUniform1f( m_uniformDistToCamera, cameraDistance );
+	m_uniformSphereRadius = glGetUniformLocation( m_program, "sphereRadius" );
+	glUniform1f( m_uniformSphereRadius, m_info->sphereRadius );
 
 #pragma region Projection Matrix
 	int height = glutGet( GLUT_WINDOW_HEIGHT );
