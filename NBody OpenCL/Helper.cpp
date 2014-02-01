@@ -86,9 +86,9 @@ void generateCoordinatesSphereFloat4( float *coord, info_t *info ) {
 
 	int index;
 	float x, y, z, phi, theta, rcostheta;
-	float r = info->sphereRadius;
+	float r = (float)info->sphereRadius;
 	float r2 = 2 * r;
-	float pi = M_PI;
+	float pi = (float)M_PI;
 	float pi2 = 2 * pi;
 
 	for( int i = 0; i < info->n; i++ ) {
