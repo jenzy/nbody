@@ -74,7 +74,7 @@ void GL::Init() {
 	m_uniformDistToCamera = glGetUniformLocation( m_program, "distCameraToCenter" );
 	glUniform1f( m_uniformDistToCamera, cameraDistance );
 	m_uniformSphereRadius = glGetUniformLocation( m_program, "sphereRadius" );
-	glUniform1f( m_uniformSphereRadius, m_info->sphereRadius );
+	glUniform1f( m_uniformSphereRadius, (GLfloat)m_info->sphereRadius );
 
 #pragma region Projection Matrix
 	int height = glutGet( GLUT_WINDOW_HEIGHT );
