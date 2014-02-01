@@ -78,10 +78,10 @@ void GL::Init() {
 #pragma region Projection Matrix
 	int height = glutGet( GLUT_WINDOW_HEIGHT );
 	int width = glutGet( GLUT_WINDOW_WIDTH );
-	glViewport( 0, 0, width, width );
+	glViewport( 0, 0, width, height );
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
-	gluPerspective( 90.0, (GLfloat) width / (GLfloat) width, 0.1, 1000.0 );
+	gluPerspective( 90.0, (GLfloat) width / (GLfloat) height, 0.1, 1000.0 );
 #pragma endregion
 
 	// Host alokacija
