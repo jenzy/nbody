@@ -22,6 +22,7 @@
     <ProjectGuid>{4822E7DA-3EB0-4EAE-A649-C8B3AC77CF22}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>NBodyOpenCL</RootNamespace>
+    <ProjectName>N-Body</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
