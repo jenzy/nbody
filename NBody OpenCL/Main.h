@@ -18,7 +18,13 @@ typedef struct _info {
 
 	cl_device_type deviceType;
 	size_t local_item_size;
+	enum CoordinatesDistributionFunction randFunc;
 } info_t;
+
+enum CoordinatesDistributionFunction {
+	SPHERE_2_POLES = 0,
+	SPHERE = 1
+};
 
 // cpu.cpp
 void cpu( info_t *info );

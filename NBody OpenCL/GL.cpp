@@ -86,9 +86,16 @@ void GL::Init() {
 
 	// Host alokacija
 	float *Coord = (float*) malloc( sizeof(cl_float4) * m_info->n );
-	//generateCoordinatesFloat4( Coord, m_info );
-	generateCoordinatesSphereFloat4( Coord, m_info );
 	float *V = (float *) calloc( m_info->n, 4 * sizeof(float) );
+	switch( m_info->randFunc ) {
+		case SPHERE_2_POLES:
+			generateCoordinatesFloat4( Coord, m_info );
+			break;
+		case SPHERE:
+		default:
+			generateCoordinatesSphereFloat4( Coord, m_info );
+			break;
+	}
 
 	// Device alokacija in kopiranje podatkov
 	glGenBuffers( 2, m_vboVertices );

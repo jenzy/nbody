@@ -13,6 +13,9 @@ void printHelp() {
 	cout << "Arguments: " << endl;
 	cout << "  -n <int> \t Set number of bodies" << endl;
 	cout << "  -s <int> \t Set number of steps" << endl;
+	cout << "  -l <int> \t Set local work size (GPU)" << endl;
+	cout << "  -rnd <int> \t Random function for generating coordinates (used only if GL)" << endl;
+	cout << "  \t\t   Possible values: 0: SPHERE, 1: SPHERE_2_POLES" << endl;
 	cout << "  -cpu and -nocpu \t Run (or don't) the simulation on CPU" << endl;
 	cout << "  -cpuopt, -nocpuopt \t Run (or don't) the simulation on CPU - the optimised version" << endl;
 	cout << "  -gpu1 and -nogpu1 \t Run (or don't) the simulation on GPU - the basic version" << endl;
@@ -35,6 +38,9 @@ int main( int argc, char **argv ) {
 	info.seed = 42;
 	info.deviceType = CL_DEVICE_TYPE_GPU;
 	info.local_item_size = 256;
+	info.randFunc = SPHERE;
+
+	printHelp();
 
 	bool doMPI = false;
 	bool doCPU = false;
@@ -45,14 +51,27 @@ int main( int argc, char **argv ) {
 	bool doCombo = false;
 	bool doGL = true;
 
+#pragma region Parse Arguments
 	for( int i = 1; i < argc; i++ ) {
 		if( argv[i][0] == '-' ) {
 			if( strcmp( argv[i], "-n" ) == 0 )
 				info.n = atoi( argv[++i] );
-			if( strcmp( argv[i], "-l" ) == 0 )
+			else if( strcmp( argv[i], "-l" ) == 0 )
 				info.local_item_size = atoi( argv[++i] );
 			else if( strcmp( argv[i], "-s" ) == 0 )
 				info.steps = atoi( argv[++i] );
+			else if( strcmp( argv[i], "-rnd" ) == 0 ) {
+				switch( atoi( argv[++i] ) ) {
+					case 0:
+						info.randFunc = SPHERE;
+						break;
+					case 1:
+						info.randFunc = SPHERE_2_POLES;
+						break;
+					default:
+						break;
+				}
+			}
 			else if( strcmp( argv[i], "-cpu" ) == 0 )
 				doCPU = true;
 			else if( strcmp( argv[i], "-nocpu" ) == 0 )
@@ -95,6 +114,8 @@ int main( int argc, char **argv ) {
 		printHelp( );
 		exit( 0 );
 	}
+
+#pragma endregion
 
 	int rank;
 	MPI_Init( &argc, &argv );
