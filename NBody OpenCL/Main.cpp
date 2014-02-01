@@ -39,7 +39,7 @@ int main( int argc, char **argv ) {
 	info.seed = 42;
 	info.deviceType = CL_DEVICE_TYPE_GPU;
 	info.local_item_size = 256;
-	info.randFunc = SPHERE;
+	info.randFunc = SPHERE_2_POLES;
 
 	bool doMPI = false;
 	bool doCPU = false;

@@ -1,7 +1,9 @@
 
 uniform float distCameraToCenter;
 uniform float sphereRadius;
-varying float alpha;
+
+// relative distance from a particle to the center of the sphere, along the z axis, € [-1, 1]
+varying float relDist;
 
 void main()
 {
@@ -15,7 +17,5 @@ void main()
     float distCameraToParticle = -cs_position.z;			// distance from camera to particle
 	float dr = distCameraToParticle - distCameraToCenter;	// distance from center to particle
 
-	//float tmp = (dr / sphereRadius + 1.0 ) / 2.0;
-	float tmp = (dr + sphereRadius) / ( 2.0 * sphereRadius );	// € (0, 1)
-	alpha = 1.0 - clamp(tmp, 0.0, 0.85);
+	relDist = clamp(dr/sphereRadius, -1, 1);
 }
