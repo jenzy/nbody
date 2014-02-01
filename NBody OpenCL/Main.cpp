@@ -30,7 +30,7 @@ void printHelp() {
 int main( int argc, char **argv ) {
 	info_t info;
 	info.n = 10240; 				
-	info.steps = 1000;	
+	info.steps = 1;	
 	info.sphereRadius = 10; //10
 	info.kappa = 1; 			
 	info.mass = 1; 			
@@ -41,14 +41,14 @@ int main( int argc, char **argv ) {
 	info.local_item_size = 256;
 	info.randFunc = SPHERE_2_POLES;
 
-	bool doMPI = false;
-	bool doCPU = false;
-	bool doCPUOpt = false;
-	bool doGPU1 = false;
-	bool doGPU2 = false;
-	bool doGPU3 = false;
-	bool doCombo = false;
-	bool doGL = true;
+	bool doMPI		= false;
+	bool doCPU		= false;
+	bool doCPUOpt	= false;
+	bool doGPU1		= true;
+	bool doGPU2		= true;
+	bool doGPU3		= true;
+	bool doCombo	= false;
+	bool doGL		= true;
 
 #pragma region Parse Arguments
 	for( int i = 1; i < argc; i++ ) {
@@ -58,7 +58,7 @@ int main( int argc, char **argv ) {
 			else if( strcmp( argv[i], "-l" ) == 0 )
 				info.local_item_size = atoi( argv[++i] );
 			else if( strcmp( argv[i], "-t" ) == 0 )
-				info.dt = atof( argv[++i] );
+				info.dt = (float) atof( argv[++i] );
 			else if( strcmp( argv[i], "-s" ) == 0 )
 				info.steps = atoi( argv[++i] );
 			else if( strcmp( argv[i], "-rnd" ) == 0 ) {

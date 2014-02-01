@@ -58,22 +58,22 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernelCombo.cl">
+    <None Include="res\kernelCombo.cl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="kernelFloat1.cl">
+    <None Include="res\kernelFloat1.cl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="kernelVec.cl">
+    <None Include="res\kernelVec.cl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="kernelVecLocal.cl">
+    <None Include="res\kernelVecLocal.cl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="shader.fragment.glsl">
+    <None Include="res\shader.fragment.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="shader.vertex.glsl">
+    <None Include="res\shader.vertex.glsl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

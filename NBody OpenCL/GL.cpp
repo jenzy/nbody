@@ -10,7 +10,7 @@ info_t *GL::m_info;
 GLuint GL::m_vboVertices[2];
 cl_mem GL::devCoord[2];
 int GL::idx = 0;
-float GL::angleY = 45;
+float GL::angleY = 0;
 float GL::angleX = 0;
 float GL::cameraDistance = 25.0f;
 Timer GL::m_timer;
@@ -47,7 +47,7 @@ GL::GL( int width, int height, info_t *info ) {
 #pragma region Initialize CL
 	CL = new WOCL( CL_DEVICE_TYPE_GPU, true );
 	CL->SetWorkSize( info->local_item_size, WOCL::CalculateNumOfGroups( info->local_item_size, info->n ), 0 );
-	CL->CreateAndBuildKernel( "kernelVec.cl", "kernelVec" );
+	CL->CreateAndBuildKernel( "res/kernelVec.cl", "kernelVec" );
 #pragma endregion
 
 }
@@ -68,8 +68,8 @@ void GL::Init() {
 	glEnableClientState( GL_VERTEX_ARRAY );
 
 #pragma region Load and use shaders
-	m_shaderVert = CreateShader( GL_VERTEX_SHADER, "shader.vertex.glsl" );
-	m_shaderFrag = CreateShader( GL_FRAGMENT_SHADER, "shader.fragment.glsl" );
+	m_shaderVert = CreateShader( GL_VERTEX_SHADER, "res/shader.vertex.glsl" );
+	m_shaderFrag = CreateShader( GL_FRAGMENT_SHADER, "res/shader.fragment.glsl" );
 	m_program = glCreateProgram( );
 	glAttachShader( m_program, m_shaderVert );
 	glAttachShader( m_program, m_shaderFrag );

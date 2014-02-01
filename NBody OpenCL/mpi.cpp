@@ -161,7 +161,7 @@ void mpiOpenCL( info_t *info ) {
 	
 	// Priprava programa
 	cl_program program;
-	BuildKernel( &program, &context, &device_id, "kernelCombo.cl" );
+	BuildKernel( &program, &context, &device_id, "res/kernelCombo.cl" );
 
 	// priprava šcepca 
 	cl_kernel krnl = clCreateKernel( program, "kernelCombo", &ret );

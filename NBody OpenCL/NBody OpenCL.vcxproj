@@ -111,14 +111,18 @@
       <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)\kernelCombo.cl" "$(TargetDir)"
-copy "$(ProjectDir)\kernelFloat1.cl" "$(TargetDir)"
-copy "$(ProjectDir)\kernelVec.cl" "$(TargetDir)"
-copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"
-copy "$(ProjectDir)\shader.vertex.glsl" "$(TargetDir)"
-copy "$(ProjectDir)\shader.fragment.glsl" "$(TargetDir)"
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>copy "$(ProjectDir)\res\kernelCombo.cl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\kernelFloat1.cl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\kernelVec.cl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\kernelVecLocal.cl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\shader.vertex.glsl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -160,14 +164,18 @@ copy "$(ProjectDir)\shader.fragment.glsl" "$(TargetDir)"
       <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)\kernelCombo.cl" "$(TargetDir)"
-copy "$(ProjectDir)\kernelFloat1.cl" "$(TargetDir)"
-copy "$(ProjectDir)\kernelVec.cl" "$(TargetDir)"
-copy "$(ProjectDir)\kernelVecLocal.cl" "$(TargetDir)"
-copy "$(ProjectDir)\shader.vertex.glsl" "$(TargetDir)"
-copy "$(ProjectDir)\shader.fragment.glsl" "$(TargetDir)"
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>copy "$(ProjectDir)\res\kernelCombo.cl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\kernelFloat1.cl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\kernelVec.cl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\kernelVecLocal.cl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\shader.vertex.glsl" "$(TargetDir)\res"
+copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cpu.cpp" />
@@ -187,23 +195,23 @@ copy "$(ProjectDir)\shader.fragment.glsl" "$(TargetDir)"
     <ClInclude Include="WOCL.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernelCombo.cl">
+    <None Include="res\kernelCombo.cl">
       <DeploymentContent>true</DeploymentContent>
     </None>
-    <None Include="kernelFloat1.cl">
+    <None Include="res\kernelFloat1.cl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
     </None>
-    <None Include="kernelVec.cl">
+    <None Include="res\kernelVec.cl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
     </None>
-    <None Include="kernelVecLocal.cl">
+    <None Include="res\kernelVecLocal.cl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
     </None>
-    <None Include="shader.fragment.glsl" />
-    <None Include="shader.vertex.glsl" />
+    <None Include="res\shader.fragment.glsl" />
+    <None Include="res\shader.vertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

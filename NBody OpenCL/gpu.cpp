@@ -26,7 +26,7 @@ void gpu( info_t *info ) {
 	generateCoordinates( X, Y, Z, M, info );
 
 	t.Tic();
-	gpu.CreateAndBuildKernel( "kernelFloat1.cl", "kernelFloat1" );
+	gpu.CreateAndBuildKernel( "res/kernelFloat1.cl", "kernelFloat1" );
 
 	// Device alokacija in kopiranje podatkov
 	cl_mem devX = gpu.CreateBuffer( info->n*sizeof(float), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, X );
@@ -94,7 +94,7 @@ void gpuVec( info_t *info ) {
 	generateCoordinatesFloat4( Coord, info );
 
 	t.Tic( );
-	gpu.CreateAndBuildKernel( "kernelVec.cl", "kernelVec" );
+	gpu.CreateAndBuildKernel( "res/kernelVec.cl", "kernelVec" );
 
 	// Device alokacija in kopiranje podatkov
 	cl_mem devCoord		= gpu.CreateBuffer( info->n*sizeof(cl_float4), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, Coord );
@@ -138,7 +138,7 @@ void gpuVecLocal( info_t *info ) {
 	generateCoordinatesFloat4( Coord, info );
 
 	t.Tic( );
-	gpu.CreateAndBuildKernel( "kernelVecLocal.cl", "kernelVecLocal" );
+	gpu.CreateAndBuildKernel( "res/kernelVecLocal.cl", "kernelVecLocal" );
 
 	// Device alokacija in kopiranje podatkov
 	cl_mem devCoord		= gpu.CreateBuffer( info->n*sizeof(cl_float4), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, Coord );

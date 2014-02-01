@@ -121,6 +121,7 @@ void cpuOpt( info_t *info ) {
 				az[j] -= fdz;
 			}
 		}
+
 		for( i = 0; i < info->n; i++ ) {
 			xnew[i] = x[i] + vx[i] * info->dt + ax[i] * dt2;
 			ynew[i] = y[i] + vy[i] * info->dt + ay[i] * dt2;
