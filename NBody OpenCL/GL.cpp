@@ -63,6 +63,7 @@ void GL::Init() {
 	glColor3f( 1.0f, 1.0f, 1.0f );
 	glEnableClientState( GL_VERTEX_ARRAY );
 
+#pragma region Load and use shaders
 	m_shaderVert = CreateShader( GL_VERTEX_SHADER, "shader.vertex.glsl" );
 	m_shaderFrag = CreateShader( GL_FRAGMENT_SHADER, "shader.fragment.glsl" );
 	m_program = glCreateProgram( );
@@ -70,6 +71,7 @@ void GL::Init() {
 	glAttachShader( m_program, m_shaderFrag );
 	glLinkProgram( m_program );
 	glUseProgram( m_program );
+#pragma endregion
 
 	m_uniformDistToCamera = glGetUniformLocation( m_program, "distCameraToCenter" );
 	glUniform1f( m_uniformDistToCamera, cameraDistance );
@@ -89,13 +91,9 @@ void GL::Init() {
 	float *Coord = (float*) malloc( sizeof(cl_float4) * m_info->n );
 	float *V = (float *) calloc( m_info->n, 4 * sizeof(float) );
 	switch( m_info->randFunc ) {
-		case SPHERE_2_POLES:
-			generateCoordinatesFloat4( Coord, m_info );
-			break;
+		case SPHERE_2_POLES:	generateCoordinatesFloat4( Coord, m_info );		break;
 		case SPHERE:
-		default:
-			generateCoordinatesSphereFloat4( Coord, m_info );
-			break;
+		default:				generateCoordinatesSphereFloat4( Coord, m_info );	break;
 	}
 
 	// Device alokacija in kopiranje podatkov
@@ -152,7 +150,6 @@ void GL::Render( void ) {
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[idx] );
 	glVertexPointer( 3, GL_FLOAT, 4*sizeof(float), 0 );
-
 	glDrawArrays( GL_POINTS, 0, m_info->n );
 
 	glutSwapBuffers( );
@@ -213,7 +210,6 @@ void GL::UpdateView() {
 	glRotatef( angleX, 1, 0, 0 );
 	glRotatef( angleY, 0, 1, 0 );
 }
-
 
 void GL::CheckShaderCompileStatus( GLuint shader ) {
 	int bufflen;
