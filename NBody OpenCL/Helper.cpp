@@ -80,3 +80,29 @@ void generateCoordinatesFloat4( float *coord, info_t *info ) {
 		coord[index + 3] = info->mass;
 	}
 }
+
+void generateCoordinatesSphereFloat4( float *coord, info_t *info ) {
+	srand( info->seed );
+
+	int index;
+	float x, y, z, phi, theta, rcostheta;
+	float r = info->sphereRadius;
+	float r2 = 2 * r;
+	float pi = M_PI;
+	float pi2 = 2 * pi;
+
+	for( int i = 0; i < info->n; i++ ) {
+		z = r2 * rand_0_1() - r;
+		phi = pi2 * rand_0_1();
+		theta = asin( z / r );
+		rcostheta = r * cos( theta );
+		x = rcostheta * cos( phi );
+		y = rcostheta * sin( phi );
+
+		index = i * 4;
+		coord[index]	 = x;
+		coord[index + 1] = y;
+		coord[index + 2] = z;
+		coord[index + 3] = info->mass;
+	}
+}

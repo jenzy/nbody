@@ -34,6 +34,8 @@ float checkResults( float *X, float *Y, float *Z, int len );
 float checkResultsFloat4( float *coord, int len );
 void generateCoordinates( float *X, float *Y, float *Z, float *M, info_t *info );
 void generateCoordinatesFloat4( float *coord, info_t *info );
+void generateCoordinatesSphereFloat4( float *coord, info_t *info );
+inline float rand_0_1() {	return rand( ) / (float) RAND_MAX;	}
 
 // HelperOpenCL.cpp
 void clinfo( );

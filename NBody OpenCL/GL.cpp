@@ -86,7 +86,8 @@ void GL::Init() {
 
 	// Host alokacija
 	float *Coord = (float*) malloc( sizeof(cl_float4) * m_info->n );
-	generateCoordinatesFloat4( Coord, m_info );
+	//generateCoordinatesFloat4( Coord, m_info );
+	generateCoordinatesSphereFloat4( Coord, m_info );
 	float *V = (float *) calloc( m_info->n, 4 * sizeof(float) );
 
 	// Device alokacija in kopiranje podatkov
@@ -142,7 +143,7 @@ void GL::Render( void ) {
 	UpdateView( );
 
 	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[idx] );
-	glVertexPointer( 3, GL_FLOAT, sizeof(float), 0 );
+	glVertexPointer( 3, GL_FLOAT, 4*sizeof(float), 0 );
 
 	glDrawArrays( GL_POINTS, 0, m_info->n );
 
