@@ -13,6 +13,7 @@ void printHelp() {
 	cout << "Arguments: " << endl;
 	cout << "  -n <int> \t Set number of bodies" << endl;
 	cout << "  -s <int> \t Set number of steps" << endl;
+	cout << "  -t <float> \t Set dt" << endl;
 	cout << "  -l <int> \t Set local work size (GPU)" << endl;
 	cout << "  -rnd <int> \t Random function for generating coordinates (used only if GL)" << endl;
 	cout << "  \t\t   Possible values: 0: SPHERE, 1: SPHERE_2_POLES" << endl;
@@ -56,6 +57,8 @@ int main( int argc, char **argv ) {
 				info.n = atoi( argv[++i] );
 			else if( strcmp( argv[i], "-l" ) == 0 )
 				info.local_item_size = atoi( argv[++i] );
+			else if( strcmp( argv[i], "-t" ) == 0 )
+				info.dt = atof( argv[++i] );
 			else if( strcmp( argv[i], "-s" ) == 0 )
 				info.steps = atoi( argv[++i] );
 			else if( strcmp( argv[i], "-rnd" ) == 0 ) {
