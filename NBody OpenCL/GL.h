@@ -6,6 +6,7 @@
 
 #define REFRESH_EVERY_X_MS 30
 #define DELTA_ANGLE_Y 1
+#define DELTA_ANGLE_X 1
 #define DELTA_CAMERA_DISTANCE 5
 
 class GL {
@@ -24,6 +25,7 @@ private:
 	static cl_mem devCoord[2];
 	static int idx;
 	static float angleY;
+	static float angleX;
 	static float cameraDistance;
 
 	static GLuint m_shaderVert;

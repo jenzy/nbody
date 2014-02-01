@@ -40,8 +40,6 @@ int main( int argc, char **argv ) {
 	info.local_item_size = 256;
 	info.randFunc = SPHERE;
 
-	printHelp();
-
 	bool doMPI = false;
 	bool doCPU = false;
 	bool doCPUOpt = false;

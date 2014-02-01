@@ -17,5 +17,5 @@ void main()
 
 	//float tmp = (dr / sphereRadius + 1.0 ) / 2.0;
 	float tmp = (dr + sphereRadius) / ( 2.0 * sphereRadius );	// € (0, 1)
-	alpha = 1.0 - clamp(tmp, 0.0, 1.0);
+	alpha = 1.0 - clamp(tmp, 0.0, 0.85);
 }

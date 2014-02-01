@@ -10,6 +10,7 @@ GLuint GL::m_vboVertices[2];
 cl_mem GL::devCoord[2];
 int GL::idx = 0;
 float GL::angleY = 45;
+float GL::angleX = 0;
 float GL::cameraDistance = 25.0f;
 
 GLuint GL::m_shaderVert;
@@ -194,6 +195,12 @@ void GL::KeyboardSpecial( int key, int x, int y ) {
 		case GLUT_KEY_RIGHT:
 			angleY += DELTA_ANGLE_Y;
 			break;
+		case GLUT_KEY_UP:
+			angleX -= DELTA_ANGLE_X;
+			break;
+		case GLUT_KEY_DOWN:
+			angleX += DELTA_ANGLE_X;
+			break;
 		default:
 			break;
 	}
@@ -203,8 +210,8 @@ void GL::UpdateView() {
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity( );
 	glTranslatef( 0.0, 0.0, -cameraDistance );
+	glRotatef( angleX, 1, 0, 0 );
 	glRotatef( angleY, 0, 1, 0 );
-	//glRotatef( 25, 1, 0, 0 );
 }
 
 
