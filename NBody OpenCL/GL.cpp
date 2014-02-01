@@ -2,6 +2,7 @@
 #include <GL/freeglut.h>
 #include "GL.h"
 #include "Main.h"
+#include "Timer.h"
 
 bool GL::m_paused = false;
 WOCL *GL::CL = nullptr;
@@ -12,12 +13,15 @@ int GL::idx = 0;
 float GL::angleY = 45;
 float GL::angleX = 0;
 float GL::cameraDistance = 25.0f;
+Timer GL::m_timer;
 
 GLuint GL::m_shaderVert;
 GLuint GL::m_shaderFrag;
 GLuint GL::m_program;
 GLint GL::m_uniformDistToCamera = 1337;
 GLint GL::m_uniformSphereRadius;
+
+char title[50];
 
 GL::GL( int width, int height, info_t *info ) {
 	printf( "\n\n== OpenGL + OpenCL ==          N: %d\n", info->n );
@@ -127,6 +131,7 @@ void GL::Play( ) {
 
 void GL::Display( void ) {
 	if( m_paused ) return;
+	m_timer.Tic();
 
 	glFinish( );
 	CL->AcquireObjectsFromGLAndFinish( 2, devCoord );
@@ -140,6 +145,10 @@ void GL::Display( void ) {
 
 	idx = ++idx % 2;
 	Render();
+
+	float time = m_timer.Toc();
+	sprintf_s( title, 50, "%2.0ffps %.3fs", 1/time, time );
+	glutSetWindowTitle( title );
 }
 
 void GL::Render( void ) {

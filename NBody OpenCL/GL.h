@@ -3,6 +3,7 @@
 #include <CL\cl.hpp>
 #include <GL/freeglut.h>
 #include "Main.h"
+#include "Timer.h"
 
 #define REFRESH_EVERY_X_MS 30
 #define DELTA_ANGLE_Y 1
@@ -27,6 +28,7 @@ private:
 	static float angleY;
 	static float angleX;
 	static float cameraDistance;
+	static Timer m_timer;
 
 	static GLuint m_shaderVert;
 	static GLuint m_shaderFrag;
