@@ -185,7 +185,6 @@ copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
     <ClCompile Include="HelperOpenCL.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="mpi.cpp" />
-    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="WOCL.cpp" />
   </ItemGroup>
   <ItemGroup>
