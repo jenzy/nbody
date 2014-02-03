@@ -55,7 +55,7 @@ void cpu( info_t *info ) {
 		SWAP( znew, z );
 	}
 
-	printf( "Cas izvajanja %lf\n", time.TocSimple() );
+	printf( "Time: %.3lf\n", time.TocSimple() );
 	checkResults( x, y, z, info->n );
 
 #pragma region Cleanup
@@ -139,7 +139,7 @@ void cpuOpt( info_t *info ) {
 		SWAP( znew, z );
 	}
 	
-	printf( "Cas izvajanja %lf\n", t.TocSimple( ) );
+	printf( "Time: %.3lf\n", t.TocSimple( ) );
 	checkResults( x, y, z, info->n );
 
 #pragma region Cleanup
