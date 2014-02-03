@@ -29,8 +29,8 @@ void printHelp() {
 
 int main( int argc, char **argv ) {
 	info_t info;
-	info.n = 10240; 				
-	info.steps = 1;	
+	info.n = 1000; 				
+	info.steps = 100;	
 	info.sphereRadius = 10; //10
 	info.kappa = 1; 			
 	info.mass = 1; 			
