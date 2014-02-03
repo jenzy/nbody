@@ -25,7 +25,7 @@ void cpu( info_t *info ) {
 	generateCoordinates( x, y, z, m, info );	//inicializacija zacetnih polozajev in mas
 #pragma endregion
 
-	time.Tic();
+	time.TicSimple();
 	float dt2 = 0.5f * info->dt * info->dt;
 	for( s = 0; s < info->steps; s++ ) {
 		for( i = 0; i < info->n; i++ ) { // za vsako telo i 
@@ -55,7 +55,7 @@ void cpu( info_t *info ) {
 		SWAP( znew, z );
 	}
 
-	printf( "Cas izvajanja %lf\n", time.Toc() );
+	printf( "Cas izvajanja %lf\n", time.TocSimple() );
 	checkResults( x, y, z, info->n );
 
 #pragma region Cleanup
@@ -97,7 +97,7 @@ void cpuOpt( info_t *info ) {
 	generateCoordinates( x, y, z, m, info );
 #pragma endregion
 
-	t.Tic();
+	t.TicSimple();
 	float dt2 = 0.5f * info->dt * info->dt;
 	for( s = 0; s < info->steps; s++ ) {
 		for( i = 0; i < info->n; i++ ) { 
@@ -139,7 +139,7 @@ void cpuOpt( info_t *info ) {
 		SWAP( znew, z );
 	}
 	
-	printf( "Cas izvajanja %lf\n", t.Toc() );
+	printf( "Cas izvajanja %lf\n", t.TocSimple( ) );
 	checkResults( x, y, z, info->n );
 
 #pragma region Cleanup
