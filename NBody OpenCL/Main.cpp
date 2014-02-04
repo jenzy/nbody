@@ -30,7 +30,7 @@ void printHelp() {
 int main( int argc, char **argv ) {
 	info_t info;
 	info.n = 1000; 				
-	info.steps = 100;	
+	info.steps = 1000;	
 	info.sphereRadius = 10; //10
 	info.kappa = 1; 			
 	info.mass = 1; 			
@@ -42,11 +42,11 @@ int main( int argc, char **argv ) {
 	info.randFunc = SPHERE_2_POLES;
 
 	bool doMPI		= false;
-	bool doCPU		= true;
-	bool doCPUOpt	= true;
-	bool doGPU1		= false;
-	bool doGPU2		= false;
-	bool doGPU3		= false;
+	bool doCPU		= false;
+	bool doCPUOpt	= false;
+	bool doGPU1		= true;
+	bool doGPU2		= true;
+	bool doGPU3		= true;
 	bool doCombo	= false;
 	bool doGL		= false;
 

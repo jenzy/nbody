@@ -170,3 +170,6 @@ void WOCL::ReleaseObjectsToGLAndFinish( cl_uint num, cl_mem *objects ) {
 	ret = clEnqueueReleaseGLObjects( m_queue, num, objects, 0, NULL, NULL );		CheckForError( ret, "clEnqueueReleaseGLObjects" );
 	ret = clFinish( m_queue );														CheckForError( ret, "clFinish @ ReleaseObjectsToGL" );
 }
+void WOCL::Finish() {
+	ret = clFinish( m_queue );														CheckForError( ret, "clFinish" );
+}

@@ -25,7 +25,7 @@ void gpu( info_t *info ) {
 	float *V = (float *) calloc( info->n, sizeof(float) );
 	generateCoordinates( X, Y, Z, M, info );
 
-	t.Tic();
+	t.TicSimple();
 	gpu.CreateAndBuildKernel( "res/kernelFloat1.cl", "kernelFloat1" );
 
 	// Device alokacija in kopiranje podatkov
@@ -70,7 +70,8 @@ void gpu( info_t *info ) {
 	gpu.CopyDeviceToHost( &devY, Y, info->n*sizeof(float) );
 	gpu.CopyDeviceToHost( &devZ, Z, info->n*sizeof(float) );
 
-	printf( "Cas izvajanja: %lf\n", t.Toc() );
+	gpu.Finish();
+	printf( "Time: %.3lf\n", t.TocSimple() );
 	checkResults( X, Y, Z, info->n );
 
 #pragma region Cleanup
@@ -93,7 +94,7 @@ void gpuVec( info_t *info ) {
 	float *V = (float *) calloc( info->n, 4 * sizeof(float) );
 	generateCoordinatesFloat4( Coord, info );
 
-	t.Tic( );
+	t.TicSimple( );
 	gpu.CreateAndBuildKernel( "res/kernelVec.cl", "kernelVec" );
 
 	// Device alokacija in kopiranje podatkov
@@ -118,7 +119,8 @@ void gpuVec( info_t *info ) {
 	// Prenos rezultatov na gostitelja
 	gpu.CopyDeviceToHost( &devCoord, Coord, info->n*sizeof(cl_float4) );
 
-	printf( "Cas izvajanja: %lf\n", t.Toc() );
+	gpu.Finish( );
+	printf( "Time: %.3lf\n", t.TocSimple() );
 	checkResultsFloat4( Coord, info->n );
 
 	free( V );
@@ -137,7 +139,7 @@ void gpuVecLocal( info_t *info ) {
 	float *V = (float *) calloc( info->n, 4 * sizeof(float) );
 	generateCoordinatesFloat4( Coord, info );
 
-	t.Tic( );
+	t.TicSimple( );
 	gpu.CreateAndBuildKernel( "res/kernelVecLocal.cl", "kernelVecLocal" );
 
 	// Device alokacija in kopiranje podatkov
@@ -163,7 +165,8 @@ void gpuVecLocal( info_t *info ) {
 	// Prenos rezultatov na gostitelja
 	gpu.CopyDeviceToHost( &devCoord, Coord, info->n*sizeof(cl_float4) );
 
-	printf( "Cas izvajanja: %lf\n", t.Toc( ) );
+	gpu.Finish();
+	printf( "Time: %.3lf\n", t.TocSimple( ) );
 	checkResultsFloat4( Coord, info->n );
 
 	free( V );

@@ -103,6 +103,7 @@ public:
 	void ExecuteKernel();
 	void AcquireObjectsFromGLAndFinish( cl_uint num, cl_mem *objects );
 	void ReleaseObjectsToGLAndFinish( cl_uint num, cl_mem *objects );
+	void Finish();
 
 	void SetAndAllocKernelArgument( int idx, size_t size );
 	template<typename T> void SetKernelArgument( int idx, T *parameter ) {
