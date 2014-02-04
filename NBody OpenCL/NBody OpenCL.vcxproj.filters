@@ -74,4 +74,7 @@
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="clinfo.out.txt" />
+  </ItemGroup>
 </Project>

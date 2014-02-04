@@ -212,6 +212,9 @@ copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
     <None Include="res\shader.fragment.glsl" />
     <None Include="res\shader.vertex.glsl" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="clinfo.out.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
