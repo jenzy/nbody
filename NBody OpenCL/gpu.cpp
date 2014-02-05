@@ -70,7 +70,6 @@ void gpu( info_t *info ) {
 	gpu.CopyDeviceToHost( &devY, Y, info->n*sizeof(float) );
 	gpu.CopyDeviceToHost( &devZ, Z, info->n*sizeof(float) );
 
-	gpu.Finish();
 	printf( "Time: %.3lf\n", t.TocSimple() );
 	checkResults( X, Y, Z, info->n );
 
@@ -119,7 +118,6 @@ void gpuVec( info_t *info ) {
 	// Prenos rezultatov na gostitelja
 	gpu.CopyDeviceToHost( &devCoord, Coord, info->n*sizeof(cl_float4) );
 
-	gpu.Finish( );
 	printf( "Time: %.3lf\n", t.TocSimple() );
 	checkResultsFloat4( Coord, info->n );
 
@@ -165,7 +163,6 @@ void gpuVecLocal( info_t *info ) {
 	// Prenos rezultatov na gostitelja
 	gpu.CopyDeviceToHost( &devCoord, Coord, info->n*sizeof(cl_float4) );
 
-	gpu.Finish();
 	printf( "Time: %.3lf\n", t.TocSimple( ) );
 	checkResultsFloat4( Coord, info->n );
 
