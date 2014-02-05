@@ -36,10 +36,9 @@ void mpi( info_t *info ) {
 		printf( "\n\n== MPI ==\n" ); 
 		printf( "Processes: %d (N: %d, steps: %d)\n",numOfProcesses, info->n, info->steps ); fflush( stdout );
 
-		// Generate coordinates and masses
 		generateCoordinatesFloat4( Coord, info );
 
-		time.Tic();
+		time.TicSimple();
 	}
 
 	// Send starting data
@@ -52,7 +51,7 @@ void mpi( info_t *info ) {
 	float dt2 = 0.5f * info->dt*info->dt;
 	for( int step = 0; step < info->steps; step++ ) {
 		int vIndex = 0;
-		for( int i = m; i < M; i += 4, vIndex += 3 ) { // za vsako telo
+		for( int i = m; i < M; i += 4, vIndex += 3 ) { // za vsako telo m <= i < M
 			ax = ay = az = 0.f;
 			myX = Coord[i]; myY = Coord[i + 1]; myZ = Coord[i + 2];
 			for( int j = 0; j < n4; j += 4 ) { // pregledamo vse ostale delce
@@ -82,7 +81,7 @@ void mpi( info_t *info ) {
 	}
 	
 	if( rank == 0 ) {
-		printf( "Cas izvajanja %lf\n", time.Toc() );
+		printf( "Time: %.3lf\n", time.TocSimple() );
 		checkResultsFloat4( Coord, info->n );
 	}
 	
