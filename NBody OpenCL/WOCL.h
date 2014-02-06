@@ -100,6 +100,7 @@ public:
 	cl_mem CreateBuffer( size_t size, cl_mem_flags flags, void *hostBuffer );
 	cl_mem CreateBufferFromGLBuffer( cl_mem_flags flags, GLuint buffer);
 	void CopyDeviceToHost( cl_mem *device, void *host, size_t size );
+	void CopyHostToDevice( cl_mem *device, void *host, size_t size );
 	void ExecuteKernel();
 	void AcquireObjectsFromGLAndFinish( cl_uint num, cl_mem *objects );
 	void ReleaseObjectsToGLAndFinish( cl_uint num, cl_mem *objects );

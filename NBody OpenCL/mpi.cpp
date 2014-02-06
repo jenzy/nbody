@@ -9,6 +9,7 @@
 
 #include "Main.h"
 #include "Timer.h"
+#include "WOCL.h"
 
 void mpi( info_t *info ) {
 	int rank, numOfProcesses;
@@ -98,7 +99,6 @@ void mpiOpenCL( info_t *info ) {
 #pragma region MPI Init
 	int rank, numOfProcesses;
 	Timer time;
-	cl_event event;
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	MPI_Comm_size( MPI_COMM_WORLD, &numOfProcesses );
 
@@ -121,87 +121,54 @@ void mpiOpenCL( info_t *info ) {
 	int myStart = disps[rank] / 4;
 #pragma endregion
 
-#pragma region OpenCL Inicializacija
-	cl_int	ret;
-	
-	// Platforma in naprava
-	cl_platform_id platform_id = nullptr;
-	ret = clGetPlatformIDs( 1, &platform_id, NULL );
-	cl_device_id device_id;
-	ret = clGetDeviceIDs( platform_id, info->deviceType, 1, &device_id, NULL );
-	printf( "[%d] ", rank); PrintDeviceInfo( &platform_id, &device_id );
-
-	cl_context context = clCreateContext( NULL, 1, &device_id, NULL, NULL, &ret );			// Kontekst
-	cl_command_queue command_queue = clCreateCommandQueue( context, device_id, 0, &ret );	// Ukazna vrsta
-#pragma endregion
-
-#pragma region OpenCL Delitev dela
-	size_t local_item_size = info->local_item_size;
-	size_t num_groups = ((myN - 1) / local_item_size + 1);
-	size_t global_item_size = num_groups*local_item_size;
-	printf( "[%d] Delitev dela: local: %d | num_groups: %d | global: %d  (myStart:%d, myN: %d)\n", 
-			rank, local_item_size, num_groups, global_item_size, myStart, myN );
-#pragma endregion
+	WOCL cl = WOCL( info->deviceType );
+	cl.SetWorkSize( info->local_item_size, WOCL::CalculateNumOfGroups( info->local_item_size, myN ), 0 );
 
 	// HOST alokacija ("float4", .w bo masa)
 	float *Coord = (float *) malloc( 4 * sizeof(float) * info->n );
 	float *newCoord = (float *) malloc( 4 * sizeof(float) * myN );
-	float *V = (float *) calloc( sizeof(float), 4 * myN );
+	float *V = (float *) calloc( 4 *sizeof(float), myN );
 	if( rank == 0 )
 		generateCoordinatesFloat4( Coord, info );
 	MPI_Bcast( Coord, 4 * info->n, MPI_FLOAT, 0, MPI_COMM_WORLD );
 
 	if( rank == 0 )
-		time.Tic();
+		time.TicSimple();
+
 	// Device alokacija
-	cl_mem devCoord    = clCreateBuffer( context, CL_MEM_READ_WRITE,                        info->n*sizeof(cl_float4), NULL, &ret );
-	cl_mem devCoordNew = clCreateBuffer( context, CL_MEM_READ_WRITE,                        myN*sizeof(cl_float4),     NULL, &ret );
-	cl_mem devV        = clCreateBuffer( context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, myN*sizeof(cl_float4),     V,    &ret );
+	cl_mem devCoord		= cl.CreateBuffer( info->n*sizeof(cl_float4), CL_MEM_READ_WRITE, NULL );
+	cl_mem devCoordNew	= cl.CreateBuffer( myN*sizeof(cl_float4), CL_MEM_READ_WRITE, NULL );
+	cl_mem devV			= cl.CreateBuffer( myN*sizeof(cl_float4), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, V );
 	
 	// Priprava programa
-	cl_program program;
-	BuildKernel( &program, &context, &device_id, "res/kernelCombo.cl" );
+	cl.CreateAndBuildKernel( "res/kernelCombo.cl", "kernelCombo" );
 
-	// priprava šcepca 
-	cl_kernel krnl = clCreateKernel( program, "kernelCombo", &ret );
-	ret = clSetKernelArg( krnl, 0, sizeof(cl_mem), (void *) &devCoord );
-	ret |= clSetKernelArg( krnl, 1, sizeof(cl_mem), (void *) &devCoordNew );
-	ret |= clSetKernelArg( krnl, 2, sizeof(cl_mem), (void *) &devV );
-	ret |= clSetKernelArg( krnl, 3, sizeof(cl_int), (void *) &myStart );
-	ret |= clSetKernelArg( krnl, 4, sizeof(cl_int), (void *) &(info->n) );
-	ret |= clSetKernelArg( krnl, 5, sizeof(cl_float), (void *) &(info->eps) );
-	ret |= clSetKernelArg( krnl, 6, sizeof(cl_float), (void *) &(info->kappa) );
-	ret |= clSetKernelArg( krnl, 7, sizeof(cl_float), (void *) &(info->dt) );
+	cl.SetKernelArgument<cl_mem>( 0, &devCoord );
+	cl.SetKernelArgument<cl_mem>( 1, &devCoordNew );
+	cl.SetKernelArgument<cl_mem>( 2, &devV );
+	cl.SetKernelArgument<cl_int>( 3, &myStart );
+	cl.SetKernelArgument<cl_int>( 4, &(info->n) );
+	cl.SetKernelArgument<cl_int>( 5, &myN );
+	cl.SetKernelArgument<cl_float>( 6, &(info->eps) );
+	cl.SetKernelArgument<cl_float>( 7, &(info->kappa) );
+	cl.SetKernelArgument<cl_float>( 8, &(info->dt) );
 
 
 	// zagon šèepca
 	for( int step = 0; step < info->steps; step++ ) {
-		ret = clEnqueueWriteBuffer( command_queue, devCoord, CL_TRUE, 0, info->n*sizeof(cl_float4), Coord, 0, NULL, NULL );
-
-		ret |= clEnqueueNDRangeKernel( command_queue, krnl, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL );
-
-		// Prenos rezultatov na gostitelja in posiljanje ostalim
-		ret = clEnqueueReadBuffer( command_queue, devCoordNew, CL_TRUE, 0, myN * sizeof(cl_float4), newCoord, 0, NULL, &event );
-		clWaitForEvents( 1, &event );
+		cl.CopyHostToDevice( &devCoord, Coord, info->n*sizeof(cl_float4) );
+		cl.ExecuteKernel();
+		cl.CopyDeviceToHost( &devCoordNew, newCoord, myN * sizeof(cl_float4) );
+		cl.Finish();
 		MPI_Allgatherv( newCoord, counts[rank], MPI_FLOAT, Coord, counts, disps, MPI_FLOAT, MPI_COMM_WORLD );
 	}
 
 	if( rank == 0 ) {
-		printf( "Cas izvajanja %lf\n", time.Toc() );
+		printf( "Time: %.3lf\n", time.TocSimple() );
 		checkResultsFloat4( Coord, info->n );
 	}
 
 #pragma region Cleanup
-	ret = clFlush( command_queue );
-	ret = clFinish( command_queue );
-	ret = clReleaseKernel( krnl );
-	ret = clReleaseProgram( program );
-	ret = clReleaseMemObject( devV );
-	ret = clReleaseMemObject( devCoord );
-	ret = clReleaseMemObject( devCoordNew );
-	ret = clReleaseCommandQueue( command_queue );
-	ret = clReleaseContext( context );
-
 	free( V );
 	free( counts );
 	free( disps );

@@ -3,6 +3,7 @@ kernel void kernelCombo( global float4 *Coord,
 							global float4 *V,
 							int m,
 							int n,
+							int myN,
 							float eps,
 							float kappa,
 							float dt
@@ -10,7 +11,7 @@ kernel void kernelCombo( global float4 *Coord,
 	int id = get_global_id( 0 );
 	int idGlobal = id + m;
 
-	if( id < n ) {
+	if( id < myN ) {
 		float4 myBody = Coord[idGlobal];
 		float4 a = (float4) (0, 0, 0, 0);
 
