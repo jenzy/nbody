@@ -142,7 +142,6 @@ void mpiOpenCL( info_t *info ) {
 	
 	// Priprava programa
 	cl.CreateAndBuildKernel( "res/kernelCombo.cl", "kernelCombo" );
-
 	cl.SetKernelArgument<cl_mem>( 0, &devCoord );
 	cl.SetKernelArgument<cl_mem>( 1, &devCoordNew );
 	cl.SetKernelArgument<cl_mem>( 2, &devV );
