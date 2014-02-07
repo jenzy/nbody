@@ -29,7 +29,7 @@ void printHelp() {
 
 int main( int argc, char **argv ) {
 	info_t info;
-	info.n = 10000; 				
+	info.n = 10240; 				
 	info.steps = 100;	
 	info.sphereRadius = 10; //10
 	info.kappa = 1; 			
@@ -45,10 +45,10 @@ int main( int argc, char **argv ) {
 	bool doCPU		= false;
 	bool doCPUOpt	= false;
 	bool doGPU1		= false;
-	bool doGPU2		= true;
+	bool doGPU2		= false;
 	bool doGPU3		= false;
-	bool doCombo	= true;
-	bool doGL		= false;
+	bool doCombo	= false;
+	bool doGL		= true;
 
 	int rank;
 	MPI_Init( &argc, &argv );
