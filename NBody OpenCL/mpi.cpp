@@ -103,7 +103,7 @@ void mpiOpenCL( info_t *info ) {
 	MPI_Comm_size( MPI_COMM_WORLD, &numOfProcesses );
 
 	if( rank == 0 ) {
-		printf( "\n\n== MPI + OpenCL (float4 local) ==\n" );
+		printf( "\n\n== MPI + OpenCL ==\n" );
 		printf( "Processes: %d (N: %d, steps: %d)\n", numOfProcesses, info->n, info->steps ); fflush( stdout );
 	}
 

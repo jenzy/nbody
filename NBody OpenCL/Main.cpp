@@ -50,6 +50,10 @@ int main( int argc, char **argv ) {
 	bool doCombo	= true;
 	bool doGL		= false;
 
+	int rank;
+	MPI_Init( &argc, &argv );
+	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+
 #pragma region Parse Arguments
 	for( int i = 1; i < argc; i++ ) {
 		if( argv[i][0] == '-' ) {
@@ -117,10 +121,6 @@ int main( int argc, char **argv ) {
 	}
 
 #pragma endregion
-
-	int rank;
-	MPI_Init( &argc, &argv );
-	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
 	if( doMPI ) {
 		mpi( &info );
