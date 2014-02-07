@@ -131,7 +131,7 @@ void GL::Play( ) {
 
 void GL::Display( void ) {
 	if( m_paused ) return;
-	m_timer.Tic();
+	m_timer.TicSimple();
 
 	glFinish( );
 	CL->AcquireObjectsFromGLAndFinish( 2, devCoord );
@@ -146,7 +146,7 @@ void GL::Display( void ) {
 	idx = ++idx % 2;
 	Render();
 
-	float time = m_timer.Toc();
+	float time = (float) m_timer.TocSimple();
 	sprintf_s( title, 50, "%2.0ffps %.3fs", 1/time, time );
 	glutSetWindowTitle( title );
 }
