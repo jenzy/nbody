@@ -115,10 +115,7 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>copy "$(ProjectDir)\res\kernelCombo.cl" "$(TargetDir)\res"
-copy "$(ProjectDir)\res\kernelFloat1.cl" "$(TargetDir)\res"
-copy "$(ProjectDir)\res\kernelVec.cl" "$(TargetDir)\res"
-copy "$(ProjectDir)\res\kernelVecLocal.cl" "$(TargetDir)\res"
+      <Command>copy "$(ProjectDir)\res\kernelVec.cl" "$(TargetDir)\res"
 copy "$(ProjectDir)\res\shader.vertex.glsl" "$(TargetDir)\res"
 copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
 </Command>
@@ -168,10 +165,7 @@ copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>copy "$(ProjectDir)\res\kernelCombo.cl" "$(TargetDir)\res"
-copy "$(ProjectDir)\res\kernelFloat1.cl" "$(TargetDir)\res"
-copy "$(ProjectDir)\res\kernelVec.cl" "$(TargetDir)\res"
-copy "$(ProjectDir)\res\kernelVecLocal.cl" "$(TargetDir)\res"
+      <Command>copy "$(ProjectDir)\res\kernelVec.cl" "$(TargetDir)\res"
 copy "$(ProjectDir)\res\shader.vertex.glsl" "$(TargetDir)\res"
 copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
 </Command>
@@ -190,18 +184,7 @@ copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
     <ClInclude Include="WOCL.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\kernelCombo.cl">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="res\kernelFloat1.cl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
-    </None>
     <None Include="res\kernelVec.cl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
-    </None>
-    <None Include="res\kernelVecLocal.cl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
     </None>

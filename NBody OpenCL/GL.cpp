@@ -4,27 +4,23 @@
 #include "Main.h"
 #include "Timer.h"
 
+// static variables initialization
 bool GL::m_paused = false;
 WOCL *GL::CL = nullptr;
-info_t *GL::m_info;
+info_t *GL::m_info = nullptr;
+Timer GL::m_timer;
 GLuint GL::m_vboVertices[2];
 cl_mem GL::devCoord[2];
 int GL::idx = 0;
-float GL::angleY = 0;
-float GL::angleX = 0;
-float GL::cameraDistance = 25.0f;
-Timer GL::m_timer;
-
-GLuint GL::m_shaderVert;
-GLuint GL::m_shaderFrag;
-GLuint GL::m_program;
-GLint GL::m_uniformDistToCamera = 1337;
+float GL::m_angleY = 0;
+float GL::m_angleX = 0;
+float GL::m_cameraDistance = 25.0f;
+GLint GL::m_uniformDistToCamera;
 GLint GL::m_uniformSphereRadius;
 
 char title[50];
 
-GL::GL( int width, int height, info_t *info ) {
-	printf( "\n\n== OpenGL + OpenCL ==          N: %d\n", info->n );
+GL::GL( int width, int height, info_t *info ){
 	m_info = info;
 
 #pragma region Create GLUT Window
@@ -37,11 +33,9 @@ GL::GL( int width, int height, info_t *info ) {
 
 #pragma region Register GLUT Callbacks
 	glutDisplayFunc( GL::Display );
-	glutTimerFunc( REFRESH_EVERY_X_MS, GL::Refresh, REFRESH_EVERY_X_MS );	//determin a minimum time between frames
+	glutTimerFunc( REFRESH_EVERY_X_MS, GL::Refresh, REFRESH_EVERY_X_MS );	//determine a minimum time between frames
 	glutKeyboardFunc( Keyboard );
 	glutSpecialFunc( KeyboardSpecial );
-	//glutMouseFunc( appMouse );
-	//glutMotionFunc( appMotion );
 #pragma endregion
 
 #pragma region Initialize CL
@@ -68,9 +62,9 @@ void GL::Init() {
 	glEnableClientState( GL_VERTEX_ARRAY );
 
 #pragma region Load and use shaders
-	m_shaderVert = CreateShader( GL_VERTEX_SHADER, "res/shader.vertex.glsl" );
-	m_shaderFrag = CreateShader( GL_FRAGMENT_SHADER, "res/shader.fragment.glsl" );
-	m_program = glCreateProgram( );
+	GLuint m_shaderVert = CreateShader( GL_VERTEX_SHADER, "res/shader.vertex.glsl" );
+	GLuint m_shaderFrag = CreateShader( GL_FRAGMENT_SHADER, "res/shader.fragment.glsl" );
+	GLuint m_program = glCreateProgram( );
 	glAttachShader( m_program, m_shaderVert );
 	glAttachShader( m_program, m_shaderFrag );
 	glLinkProgram( m_program );
@@ -78,7 +72,7 @@ void GL::Init() {
 #pragma endregion
 
 	m_uniformDistToCamera = glGetUniformLocation( m_program, "distCameraToCenter" );
-	glUniform1f( m_uniformDistToCamera, cameraDistance );
+	glUniform1f( m_uniformDistToCamera, m_cameraDistance );
 	m_uniformSphereRadius = glGetUniformLocation( m_program, "sphereRadius" );
 	glUniform1f( m_uniformSphereRadius, (GLfloat)m_info->sphereRadius );
 
@@ -103,10 +97,9 @@ void GL::Init() {
 	// Device alokacija in kopiranje podatkov
 	glGenBuffers( 2, m_vboVertices );
 	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[0] );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(cl_float4) * m_info->n, Coord, GL_DYNAMIC_DRAW ); // upload data to video card
-
+	glBufferData( GL_ARRAY_BUFFER, sizeof(cl_float4) * m_info->n, Coord, GL_STATIC_DRAW ); // upload data to video card
 	glBindBuffer( GL_ARRAY_BUFFER, m_vboVertices[1] );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(cl_float4) * m_info->n, Coord, GL_DYNAMIC_DRAW ); // upload data to video card
+	glBufferData( GL_ARRAY_BUFFER, sizeof(cl_float4) * m_info->n, Coord, GL_STATIC_DRAW ); // upload data to video card
 
 	devCoord[0] = CL->CreateBufferFromGLBuffer( CL_MEM_READ_WRITE, m_vboVertices[0] );
 	devCoord[1] = CL->CreateBufferFromGLBuffer( CL_MEM_READ_WRITE, m_vboVertices[1] );
@@ -123,7 +116,7 @@ void GL::Init() {
 	CL->SetKernelArgument<cl_float>( 6, &(m_info->dt) );
 }
 
-void GL::Play( ) {
+void GL::Start( ) {
 	Init();
 
 	glutMainLoop( );
@@ -169,7 +162,6 @@ void GL::Refresh( int ms ) {
 	glutTimerFunc( ms, GL::Refresh, ms );
 	glutPostRedisplay( );
 }
-
 void GL::Keyboard( unsigned char key, int x, int y ) {
 	switch( key ) {
 		case 27:		// ESC
@@ -179,33 +171,30 @@ void GL::Keyboard( unsigned char key, int x, int y ) {
 			m_paused = !m_paused;
 			break;
 		case '+':
-			cameraDistance -= DELTA_CAMERA_DISTANCE;
-			if( m_uniformDistToCamera != 1337 )
-				glUniform1f( m_uniformDistToCamera, cameraDistance );
+			m_cameraDistance -= DELTA_CAMERA_DISTANCE;
+			glUniform1f( m_uniformDistToCamera, m_cameraDistance );
 			break;
 		case '-':
-			cameraDistance += DELTA_CAMERA_DISTANCE;
-			if( m_uniformDistToCamera != 1337 )
-				glUniform1f( m_uniformDistToCamera, cameraDistance );
+			m_cameraDistance += DELTA_CAMERA_DISTANCE;
+			glUniform1f( m_uniformDistToCamera, m_cameraDistance );
 			break;
 		default:
 			break;
 	}
 }
-
 void GL::KeyboardSpecial( int key, int x, int y ) {
 	switch( key ) {
 		case GLUT_KEY_LEFT:
-			angleY -= DELTA_ANGLE_Y;
+			m_angleY -= DELTA_ANGLE_Y;
 			break;
 		case GLUT_KEY_RIGHT:
-			angleY += DELTA_ANGLE_Y;
+			m_angleY += DELTA_ANGLE_Y;
 			break;
 		case GLUT_KEY_UP:
-			angleX -= DELTA_ANGLE_X;
+			m_angleX -= DELTA_ANGLE_X;
 			break;
 		case GLUT_KEY_DOWN:
-			angleX += DELTA_ANGLE_X;
+			m_angleX += DELTA_ANGLE_X;
 			break;
 		default:
 			break;
@@ -215,9 +204,9 @@ void GL::KeyboardSpecial( int key, int x, int y ) {
 void GL::UpdateView() {
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity( );
-	glTranslatef( 0.0, 0.0, -cameraDistance );
-	glRotatef( angleX, 1, 0, 0 );
-	glRotatef( angleY, 0, 1, 0 );
+	glTranslatef( 0.0, 0.0, -m_cameraDistance );
+	glRotatef( m_angleX, 1, 0, 0 );
+	glRotatef( m_angleY, 0, 1, 0 );
 }
 
 void GL::CheckShaderCompileStatus( GLuint shader ) {

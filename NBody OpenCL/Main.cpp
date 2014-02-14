@@ -19,7 +19,7 @@ void printHelp() {
 
 int main( int argc, char **argv ) {
 	info_t info;
-	info.n = 10240;
+	info.n = 10000;
 	info.sphereRadius = 10; //10
 	info.kappa = 1;
 	info.mass = 1;
@@ -60,6 +60,6 @@ int main( int argc, char **argv ) {
 	
 	glutInit( &argc, argv );
 	GL gpu = GL( 800, 800, &info );
-	gpu.Play();
+	gpu.Start();
 
 }

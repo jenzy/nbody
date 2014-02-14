@@ -35,24 +35,15 @@
     <ClInclude Include="WOCL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GL.h">
+    <ClInclude Include="Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Timer.h">
+    <ClInclude Include="GL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\kernelCombo.cl">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="res\kernelFloat1.cl">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="res\kernelVec.cl">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="res\kernelVecLocal.cl">
       <Filter>Source Files</Filter>
     </None>
     <None Include="res\shader.fragment.glsl">
