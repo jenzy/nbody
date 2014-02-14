@@ -8,7 +8,6 @@
 
 typedef struct _info {
 	int n; 			        /* stevilo teles */
-	int steps; 			    /* stevilo korakov */
 	double sphereRadius; 	/* nastavitve zacetne konfiguracije */
 	float kappa; 			/* gravitacijska konstanta */
 	float mass; 			/* masa teles */
@@ -26,23 +25,8 @@ enum CoordinatesDistributionFunction {
 	SPHERE = 1
 };
 
-// cpu.cpp
-void cpu( info_t *info );
-void cpuOpt( info_t *info );
-
-// gpu.cpp
-void gpu( info_t *info );
-void gpuVec( info_t *info );
-void gpuVecLocal( info_t *info );
 
 // Helper.cpp
-float checkResults( float *X, float *Y, float *Z, int len );
-float checkResultsFloat4( float *coord, int len );
-void generateCoordinates( float *X, float *Y, float *Z, float *M, info_t *info );
 void generateCoordinatesFloat4( float *coord, info_t *info );
 void generateCoordinatesSphereFloat4( float *coord, info_t *info );
 inline float rand_0_1() {	return rand( ) / (float) RAND_MAX;	}
-
-// mpi.cpp
-void mpi( info_t *info );
-void mpiOpenCL( info_t *info );
