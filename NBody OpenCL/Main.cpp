@@ -26,6 +26,7 @@ void printHelp() {
 	cout << "Controls: " << endl;
 	cout << "  Arrow keys \t - Rotate camera left/right/up/down" << endl;
 	cout << "  +/- \t - Adjust the distance from camera to center" << endl;
+	cout << "  Space \t - Pause" << endl;
 	cout << "  Esc \t - Quit" << endl;
 }
 
@@ -40,7 +41,7 @@ int main( int argc, char **argv ) {
 	info.seed = 42;
 	info.deviceType = CL_DEVICE_TYPE_GPU;
 	info.local_item_size = 256;
-	info.generateFunc = generateCoordinatesSphereFloat4;
+	info.generateFunc = generateCoordinatesFloat4;
 
 #pragma region Parse Arguments
 	for( int i = 1; i < argc; i++ ) {
