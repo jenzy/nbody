@@ -11,10 +11,10 @@ WOCL::WOCL( cl_device_type deviceType, bool shareWithGL ) {
 
 	ret = clGetPlatformIDs( 1, &m_platformId, NULL );									CheckForError( ret, "clGetPlatformIDs" );
 	ret = clGetDeviceIDs( m_platformId, deviceType, 1, &m_deviceId, NULL );				CheckForError( ret, "clGetDeviceIDs" );
-
-	std::cout << "Naprava: " << GetDeviceName( &m_deviceId ) << " (" << GetPlatformName( &m_platformId ) << ")" << std::endl;
+	std::cout << "Device: " << GetDeviceName( &m_deviceId ) << " (" << GetPlatformName( &m_platformId ) << ")" << std::endl;
 
 	if( shareWithGL ) {
+		// WINDOWS ONLY!!
 		cl_context_properties props[] =	{
 			CL_GL_CONTEXT_KHR, (cl_context_properties) wglGetCurrentContext(),
 			CL_WGL_HDC_KHR, (cl_context_properties) wglGetCurrentDC(),
@@ -42,17 +42,15 @@ WOCL::~WOCL() {
 	CheckForError( ret, "Cleanup" );
 }
 
-bool WOCL::CheckForError( cl_int err, std::string name ) {
-	if( err == CL_SUCCESS ) return false;
-	else {
+void WOCL::CheckForError( cl_int err, std::string name ) {
+	if( err != CL_SUCCESS ) {
 		std::cout << "ERROR: " << CLErrorName( err ) << "    " << name << "@" << this->m_id << std::endl;
-		if(EXIT_ON_ERROR) exit( err );
-		return true;
+		exit( err );
 	}
 }
 void WOCL::PrintError( std::string error ) {
 	std::cout << "ERROR: " << error << std::endl;
-	if( EXIT_ON_ERROR ) exit( -1 );
+	exit( -1 );
 }
 
 std::string WOCL::GetPlatformName( cl_platform_id *platformId ) {
@@ -162,9 +160,6 @@ void WOCL::SetAndAllocKernelArgument( int idx, size_t size ) {
 void WOCL::ExecuteKernel() {
 	ret = clEnqueueNDRangeKernel( m_queue, m_kernel, 1, NULL, &m_globalItemSize, &m_localItemSize, 0, NULL, NULL );
 	CheckForError( ret, "clEnqueueNDRangeKernel" );
-}
-cl_command_queue WOCL::GetQueue() {
-	return m_queue;
 }
 void WOCL::AcquireObjectsFromGLAndFinish( cl_uint num, cl_mem *objects ) {
 	ret = clEnqueueAcquireGLObjects( m_queue, num, objects, 0, NULL, NULL );		CheckForError( ret, "clEnqueueAcquireGLObjects" );

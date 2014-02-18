@@ -18,7 +18,6 @@ struct info_t {
 };
 typedef info_t info_t;
 
-// Helper.cpp
+inline float rand_0_1() {	return rand( ) / (float) RAND_MAX;	}
 void generateCoordinatesFloat4( float *coord, info_t *info );
 void generateCoordinatesSphereFloat4( float *coord, info_t *info );
-inline float rand_0_1() {	return rand( ) / (float) RAND_MAX;	}

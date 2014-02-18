@@ -26,7 +26,6 @@ private:
 
 	// for checking opencl errors
 	cl_int ret = 0;
-	bool EXIT_ON_ERROR = true;
 	std::string m_id;
 
 public:
@@ -48,7 +47,6 @@ public:
 			case -10: return "CL_IMAGE_FORMAT_NOT_SUPPORTED";
 			case -11: return "CL_BUILD_PROGRAM_FAILURE";
 			case -12: return "CL_MAP_FAILURE";
-
 			case -30: return "CL_INVALID_VALUE";
 			case -31: return "CL_INVALID_DEVICE_TYPE";
 			case -32: return "CL_INVALID_PLATFORM";
@@ -91,12 +89,11 @@ public:
 	static std::string GetBuildLog( cl_program *program, cl_device_id *device_id );
 	static char* ReadWholeFile( char *filename, int *outLen );
 
-	bool CheckForError( cl_int err, std::string name );
+	void CheckForError( cl_int err, std::string name );
 	void PrintError( std::string error );
 
 	void SetWorkSize( size_t numItemsPerGroup, size_t numGroups, size_t numItemsGlobal );
 	void CreateAndBuildKernel( char *filename, char *functionName );
-
 	cl_mem CreateBuffer( size_t size, cl_mem_flags flags, void *hostBuffer );
 	cl_mem CreateBufferFromGLBuffer( cl_mem_flags flags, GLuint buffer);
 	void CopyDeviceToHost( cl_mem *device, void *host, size_t size );
@@ -111,7 +108,5 @@ public:
 		ret = clSetKernelArg( m_kernel, idx, sizeof(T), (void *) parameter );
 		CheckForError( ret, "clSetKernelArg" );
 	}
-
-	cl_command_queue GetQueue( );
 };
 

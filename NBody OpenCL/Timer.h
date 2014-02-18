@@ -7,7 +7,7 @@ public:
 	Timer() {}
 	~Timer() {}
 private:
-	clock_t m_simple_tic;
+	clock_t m_simple_tic = -1;
 	std::stack<clock_t> m_tics;
 	double m_average;
 	long m_N;
@@ -16,6 +16,7 @@ public:
 		m_simple_tic = clock( );
 	}
 	inline double TocSimple() {
+		if( m_simple_tic == -1 ) return 0;
 		return (double) (clock( ) - m_simple_tic) / CLOCKS_PER_SEC;
 	}
 	inline void Tic() {
