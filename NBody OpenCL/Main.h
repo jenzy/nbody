@@ -2,13 +2,10 @@
 #include <CL\cl.h>
 
 #define M_PI 3.1415926
-#define SWAP_DOUBLE(a,b) do {double *temp=a; a=b; b=temp;} while(0)
-#define SWAP(a,b) do {float *temp=a; a=b; b=temp;} while(0)
-#define SWAP_MEM(a,b) do {cl_mem temp=a; a=b; b=temp;} while(0)
 
-typedef struct _info {
+struct info_t {
 	int n; 			        /* stevilo teles */
-	double sphereRadius; 	/* nastavitve zacetne konfiguracije */
+	float sphereRadius; 	/* nastavitve zacetne konfiguracije */
 	float kappa; 			/* gravitacijska konstanta */
 	float mass; 			/* masa teles */
 	float eps; 				/* konstanta glajenja */
@@ -17,14 +14,9 @@ typedef struct _info {
 
 	cl_device_type deviceType;
 	size_t local_item_size;
-	enum CoordinatesDistributionFunction randFunc;
-} info_t;
-
-enum CoordinatesDistributionFunction {
-	SPHERE_2_POLES = 0,
-	SPHERE = 1
+	void ( *generateFunc )(float*, info_t*);		/* function which generates the initial coordinates of the particles */
 };
-
+typedef info_t info_t;
 
 // Helper.cpp
 void generateCoordinatesFloat4( float *coord, info_t *info );
