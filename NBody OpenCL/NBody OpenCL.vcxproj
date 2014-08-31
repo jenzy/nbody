@@ -101,18 +101,18 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\++\Libs\glew-1.10.0\include;C:\Program Files (x86)\AMD APP SDK\2.9\include;D:\++\Libs\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\libs\glew-1.11.0\include;C:\Program Files (x86)\AMD APP SDK\2.9\include;$(ProjectDir)\libs\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\++\Libs\glew-1.10.0\lib\Release\x64;C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;D:\++\Libs\freeglut\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\libs\glew-1.11.0\lib\Release\x64;C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;$(ProjectDir)\libs\freeglut\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencl.lib;amd64/msmpi.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy "$(ProjectDir)\libs\freeglut\bin\x64\freeglut.dll" "$(TargetDir)"
+copy "$(ProjectDir)\libs\glew-1.11.0\bin\Release\x64\glew32.dll" "$(TargetDir)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>copy "$(ProjectDir)\res\kernelVec.cl" "$(TargetDir)\res"
@@ -149,7 +149,7 @@ copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\++\Libs\glew-1.10.0\include;C:\Program Files (x86)\AMD APP SDK\2.9\include;D:\++\Libs\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\libs\glew-1.11.0\include;C:\Program Files (x86)\AMD APP SDK\2.9\include;$(ProjectDir)\libs\freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
@@ -157,12 +157,12 @@ copy "$(ProjectDir)\res\shader.fragment.glsl" "$(TargetDir)\res"
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\++\Libs\glew-1.10.0\lib\Release\x64;C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;D:\++\Libs\freeglut\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\libs\glew-1.11.0\lib\Release\x64;C:\Program Files (x86)\AMD APP SDK\2.9\lib\x86_64;$(ProjectDir)\libs\freeglut\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencl.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy "$(ProjectDir)\libs\freeglut\bin\x64\freeglut.dll" "$(TargetDir)"
+copy "$(ProjectDir)\libs\glew-1.11.0\bin\Release\x64\glew32.dll" "$(TargetDir)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>copy "$(ProjectDir)\res\kernelVec.cl" "$(TargetDir)\res"
