@@ -20,7 +20,7 @@ GLint GL::m_uniformSphereRadius;
 
 char title[50];
 
-GL::GL( int width, int height, info_t *info ){
+GL::GL( int width, int height, info_t *info, bool fullscreen = false ) {
 	m_info = info;
 
 #pragma region Create GLUT Window
@@ -29,6 +29,9 @@ GL::GL( int width, int height, info_t *info ){
 	glutInitWindowPosition( glutGet( GLUT_SCREEN_WIDTH ) / 2 - width/2, glutGet( GLUT_SCREEN_HEIGHT ) / 2 - height/2 );
 	glutCreateWindow( "N-Body" );
 	glewInit( );
+
+	if(fullscreen )
+		glutFullScreen();
 #pragma endregion
 
 #pragma region Register GLUT Callbacks
@@ -173,6 +176,9 @@ void GL::Keyboard( unsigned char key, int x, int y ) {
 		case '-':
 			m_cameraDistance += DELTA_CAMERA_DISTANCE;
 			glUniform1f( m_uniformDistToCamera, m_cameraDistance );
+			break;
+		case 'f':
+			glutFullScreenToggle();
 			break;
 		default:
 			break;

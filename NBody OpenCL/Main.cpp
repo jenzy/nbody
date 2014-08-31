@@ -9,6 +9,7 @@
 
 int width = 1422;
 int height = 800;
+bool fullscreen = false;
 
 void printHelp() {
 	using namespace std;
@@ -21,12 +22,14 @@ void printHelp() {
 	cout << "  -r <float> \t Set the radius of the starting sphere" << endl;
 	cout << "  -rnd <int> \t Random function for generating coordinates (used only if GL)" << endl;
 	cout << "  \t\t   Possible values: 0: SPHERE, 1: SPHERE_2_POLES" << endl;
+	cout << "  -full \t Start in fullscreen" << endl;
 
 	cout << endl;
 	cout << "Controls: " << endl;
 	cout << "  Arrow keys \t - Rotate camera left/right/up/down" << endl;
 	cout << "  +/- \t - Adjust the distance from camera to center" << endl;
 	cout << "  Space \t - Pause" << endl;
+	cout << "  F \t - Toggle fullscreen" << endl;
 	cout << "  Esc \t - Quit" << endl;
 }
 
@@ -53,7 +56,8 @@ int main( int argc, char **argv ) {
 			else if( !strcmp( argv[i], "-w" )  )		width				 = atoi( argv[++i] );
 			else if( !strcmp( argv[i], "-h" )  )		height				 = atoi( argv[++i] );
 			else if( !strcmp( argv[i], "-t" )  )		info.dt				 = (float) atof( argv[++i] );
-			else if( !strcmp( argv[i], "-r" )  )		info.sphereRadius = (float) atof( argv[++i] );
+			else if( !strcmp( argv[i], "-r" ) )			info.sphereRadius = (float) atof( argv[++i] );
+			else if( !strcmp( argv[i], "-r" ) )			fullscreen = true;
 			else if( !strcmp( argv[i], "-rnd" )  ) {
 				switch( atoi( argv[++i] ) ) {
 					case 0:		info.generateFunc = generateCoordinatesSphereFloat4;	break;
@@ -66,7 +70,7 @@ int main( int argc, char **argv ) {
 #pragma endregion
 	
 	glutInit( &argc, argv );
-	GL gpu = GL( width, height, &info );
+	GL gpu = GL( width, height, &info, fullscreen );
 	gpu.Start();
 
 }

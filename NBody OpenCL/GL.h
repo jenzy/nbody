@@ -12,7 +12,7 @@
 
 class GL {
 public:
-	GL( int width, int height, info_t *info );
+	GL( int width, int height, info_t *info, bool fullscreen );
 	~GL();
 
 	void Start();
