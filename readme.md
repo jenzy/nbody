@@ -1,7 +1,7 @@
 N-Body Simulation
 ======================
 
-![Screenshot](https://bitbucket.org/zero-slo/n-body/raw/master/screen.png)
+![Screenshot](screen.png)
 
 Made using OpenCL so all the calculations run on a GPU.
 
