@@ -6,7 +6,7 @@ N-Body Simulation
 Made using OpenCL so all the calculations run on a GPU.
 
 [Video](https://www.youtube.com/watch?v=teazZR58TOs)    
-[Download](https://bitbucket.org/zero-slo/n-body/downloads/Release-win-x64.zip)    
+[Download](../../downloads/Release-win-x64.zip)    
 
 [AMD APP SDK (OpenCL)](http://developer.amd.com/tools-and-sdks/heterogeneous-computing/amd-accelerated-parallel-processing-app-sdk/)     
 [Freeglut](http://freeglut.sourceforge.net/)     
