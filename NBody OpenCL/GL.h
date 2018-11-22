@@ -1,7 +1,5 @@
 #pragma once
 #include "WOCL.h"
-#include <CL\cl.hpp>
-#include <GL\freeglut.h>
 #include "Main.h"
 #include "Timer.h"
 
@@ -12,35 +10,35 @@
 
 class GL {
 public:
-	GL( int width, int height, info_t *info, bool fullscreen );
-	~GL();
+    GL( int width, int height, info_t *info, bool fullscreen );
+    ~GL();
 
-	void Start();
-	void Init();
+    void Start();
+    void Init();
 
 private:
-	static bool m_paused;
-	static float m_angleY, m_angleX, m_cameraDistance;
-	
-	static WOCL *CL;
-	static Timer m_timer;
-	static info_t *m_info;
+    static bool m_paused;
+    static float m_angleY, m_angleX, m_cameraDistance;
+    
+    static WOCL *CL;
+    static Timer m_timer;
+    static info_t *m_info;
 
-	static GLuint m_vboVertices[2];
-	static cl_mem devCoord[2];
-	static int idx;
+    static GLuint m_vboVertices[2];
+    static cl_mem devCoord[2];
+    static int idx;
 
-	static GLint m_uniformDistToCamera;
-	static GLint m_uniformSphereRadius;
+    static GLint m_uniformDistToCamera;
+    static GLint m_uniformSphereRadius;
 
-	static void Display( void );	// The "update" function
-	static void Render( void );		// The "render" function
-	static void Refresh( int ms );
-	static void UpdateView();		// Updates the view matrix
-	static void Keyboard( unsigned char key, int x, int y );
-	static void KeyboardSpecial( int key, int x, int y );
+    static void Display();	// The "update" function
+    static void Render( );		// The "render" function
+    static void Refresh( int ms );
+    static void UpdateView();		// Updates the view matrix
+    static void Keyboard( unsigned char key, int x, int y );
+    static void KeyboardSpecial( int key, int x, int y );
 
-	static void CheckShaderCompileStatus( GLuint shader );
-	static GLint CreateShader( GLenum shaderType, char *filename );
+    static void CheckShaderCompileStatus( GLuint shader );
+    static GLint CreateShader( GLenum shaderType, char *filename );
 };
 
