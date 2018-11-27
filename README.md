@@ -2,7 +2,7 @@
 
 ![Screenshot](screen.png)
 
-A N-Body simulation. Made using OpenCL, all the simulation calculations are executed on a GPU.
+An N-Body simulation. Made using OpenCL, all the simulation calculations are executed on a GPU.
 
 [Video](https://www.youtube.com/watch?v=teazZR58TOs)  
 [Download binaries](../../releases/latest)  
